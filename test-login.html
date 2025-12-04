@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        button {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        button:hover {
+            background: #1565c0;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔐 Test de Connexion Backend</h1>
+    
+    <div>
+        <h3>Informations du test :</h3>
+        <p><strong>URL API:</strong> http://localhost:3000/api/login</p>
+        <p><strong>Email:</strong> test@example.com</p>
+        <p><strong>Mot de passe:</strong> Test@123456</p>
+    </div>
+
+    <button onclick="testLogin()">Tester la connexion</button>
+
+    <div id="result"></div>
+
+    <script>
+        async function testLogin() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<p>Test en cours...</p>';
+
+            try {
+                console.log('🔍 Envoi de la requête de connexion...');
+                
+                const response = await fetch('http://localhost:3000/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'test@example.com',
+                        password: 'Test@123456'
+                    })
+                });
+
+                console.log('📡 Réponse reçue:', response);
+
+                const data = await response.json();
+                console.log('📦 Données:', data);
+
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <h3>✅ SUCCÈS !</h3>
+                        <p><strong>Token reçu:</strong> ${data.data.token.substring(0, 50)}...</p>
+                        <p><strong>Utilisateur:</strong> ${data.data.user.prenom} ${data.data.user.nom}</p>
+                        <p><strong>Email:</strong> ${data.data.user.email}</p>
+                        <p><strong>Rôle:</strong> ${data.data.user.role}</p>
+                        <hr>
+                        <p><strong>Réponse complète:</strong></p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `
+                        <h3>❌ ERREUR</h3>
+                        <p><strong>Status:</strong> ${response.status}</p>
+                        <p><strong>Message:</strong> ${data.message || data.error}</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                console.error('❌ Erreur:', error);
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                    <h3>❌ ERREUR RÉSEAU</h3>
+                    <p><strong>Type:</strong> ${error.name}</p>
+                    <p><strong>Message:</strong> ${error.message}</p>
+                    <hr>
+                    <h4>Causes possibles :</h4>
+                    <ul>
+                        <li>Le backend n'est pas démarré sur http://localhost:3000</li>
+                        <li>Problème de configuration CORS</li>
+                        <li>Le pare-feu bloque la connexion</li>
+                    </ul>
+                    <h4>Solutions :</h4>
+                    <ol>
+                        <li>Vérifier que le backend est démarré (voir console Node.js)</li>
+                        <li>Vérifier les logs du backend pour les erreurs CORS</li>
+                        <li>Ouvrir la console du navigateur (F12) pour plus de détails</li>
+                    </ol>
+                `;
+            }
+        }
+
+        // Afficher les informations de l'environnement
+        console.log('🌐 Page de test chargée');
+        console.log('📍 Origin:', window.location.origin);
+    </script>
+</body>
+</html>
