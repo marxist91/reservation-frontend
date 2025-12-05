@@ -1,8 +1,6 @@
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useNotificationStore } from '../store/notificationStore';
-import { useHistoryStore } from '../store/historyStore';
-import { useAuthStore } from '../store/authStore';
+import { useNotificationStore, useHistoryStore, useAuthStore } from '@/store';
 import type { Reservation } from '@/types';
 
 export interface UseNotificationHistoryReturn {

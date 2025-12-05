@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useUsers } from '@/hooks/useUsers';
+import { useUsers } from '@/hooks';
 import { authAPI } from '@/api/auth';
 import toast from 'react-hot-toast';
 import type { User } from '@/types';

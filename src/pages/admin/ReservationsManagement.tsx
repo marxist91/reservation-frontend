@@ -48,8 +48,8 @@ import { usersAPI } from '@/api/users';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import toast from 'react-hot-toast';
-import { useHistoryStore } from '@/store/historyStore';
-import { useAuth } from '@/hooks/useAuth';
+import { useHistoryStore } from '@/store';
+import { useAuth } from '@/hooks';
 import type { Reservation, Room, User } from '@/types';
 
 type ViewMode = 'table' | 'grid';

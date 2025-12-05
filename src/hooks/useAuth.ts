@@ -1,4 +1,4 @@
-import { useAuthStore } from '../store/authStore';
+import { useAuthStore } from '@/store';
 import { useNavigate } from 'react-router-dom';
 import { useCallback, useMemo } from 'react';
 import type { LoginFormData, RegisterFormData, UserRole } from '@/types';

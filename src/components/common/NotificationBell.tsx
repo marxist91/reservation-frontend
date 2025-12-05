@@ -23,11 +23,11 @@ import {
   DoneAll as DoneAllIcon,
   ClearAll as ClearAllIcon,
 } from '@mui/icons-material';
-import { useNotificationStore } from '@/store/notificationStore';
+import { useNotificationStore } from '@/store';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import type { ExtendedNotification } from '@/store/notificationStore';
+import type { ExtendedNotification } from '@/store';
 
 const NotificationBell: React.FC = () => {
   const navigate = useNavigate();

@@ -28,7 +28,7 @@ import {
   DoneAll as DoneAllIcon,
   Notifications as NotificationsIcon,
 } from '@mui/icons-material';
-import { useNotificationStore } from '@/store/notificationStore';
+import { useNotificationStore } from '@/store';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow, format } from 'date-fns';
 import { fr } from 'date-fns/locale';

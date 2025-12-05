@@ -1,8 +1,6 @@
 import { useQuery, useMutation, useQueryClient, type UseMutationResult } from '@tanstack/react-query';
-import { reservationsAPI } from '../api/reservations';
-import { useAuthStore } from '../store/authStore';
-import { useHistoryStore } from '../store/historyStore';
-import { useNotificationStore } from '../store/notificationStore';
+import { reservationsAPI } from '@/api/reservations';
+import { useAuthStore, useHistoryStore, useNotificationStore } from '@/store';
 import toast from 'react-hot-toast';
 import type { Reservation, ReservationFormData } from '@/types';
 

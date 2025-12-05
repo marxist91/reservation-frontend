@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useReservations } from '@/hooks/useReservations';
+import { useReservations } from '@/hooks';
 import { formatTimeRange, formatFullName } from '@/utils/formatters';
 import { RESERVATION_STATUS_COLORS, RESERVATION_STATUS_LABELS } from '@/utils/constants';
 import type { Reservation } from '@/types';

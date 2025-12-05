@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient, type UseMutationResult } from '@tanstack/react-query';
-import { roomsAPI } from '../api/rooms';
+import { roomsAPI } from '@/api/rooms';
 import toast from 'react-hot-toast';
 import type { Room, RoomFormData } from '@/types';
 

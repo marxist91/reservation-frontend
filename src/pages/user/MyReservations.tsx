@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useReservations } from '@/hooks/useReservations';
+import { useReservations } from '@/hooks';
 import { ReservationCard } from '@/components/reservations';
 import type { Reservation } from '@/types';
 import {

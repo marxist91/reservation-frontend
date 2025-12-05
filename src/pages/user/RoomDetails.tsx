@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { roomsAPI } from '@/api/rooms';
-import { useReservations } from '@/hooks/useReservations';
+import { useReservations } from '@/hooks';
 import { ReservationForm } from '@/components/reservations';
 import type { Room } from '@/types';
 import {

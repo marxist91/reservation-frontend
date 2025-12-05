@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useRooms } from '@/hooks/useRooms';
-import { useReservations } from '@/hooks/useReservations';
+import { useRooms } from '@/hooks';
+import { useReservations } from '@/hooks';
 import { RoomCard } from '@/components/rooms';
 import { ReservationForm } from '@/components/reservations';
 import type { Room } from '@/types';

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '@/store/authStore';
-import { useRooms } from '@/hooks/useRooms';
-import { useReservations } from '@/hooks/useReservations';
+import { useAuthStore } from '@/store';
+import { useRooms } from '@/hooks';
+import { useReservations } from '@/hooks';
 import { useQuery } from '@tanstack/react-query';
 import { usersAPI } from '@/api/users';
 import toast from 'react-hot-toast';

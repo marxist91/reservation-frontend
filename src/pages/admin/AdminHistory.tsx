@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
-import { useHistoryStore } from '@/store/historyStore';
-import { useAuthStore } from '@/store/authStore';
+import { useHistoryStore } from '@/store';
+import { useAuthStore } from '@/store';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import {
