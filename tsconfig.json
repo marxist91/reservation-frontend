@@ -50,7 +50,8 @@
       "@/store/*": ["./src/store/*"],
       "@/api/*": ["./src/api/*"],
       "@/utils/*": ["./src/utils/*"],
-      "@/types/*": ["./src/types/*"]
+      "@/types/*": ["./src/types/*"],
+      "@/types": ["./src/types/index.ts"]
     }
   },
   "include": [

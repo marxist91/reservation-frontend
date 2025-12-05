@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { RoomCard, RoomForm } from '@/components/rooms';
+import RoomCard from '@/components/rooms/RoomCard';
+import RoomForm from '@/components/rooms/RoomForm';
 import toast from 'react-hot-toast';
 import { roomsAPI } from '@/api/rooms';
 import type { Room } from '@/types';

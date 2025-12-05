@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ReservationCard } from '@/components/reservations';
+import ReservationCard from '@/components/reservations/ReservationCard';
 import {
   Typography,
   Paper,
@@ -48,8 +48,8 @@ import { usersAPI } from '@/api/users';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import toast from 'react-hot-toast';
-import { useHistoryStore } from '@/store';
-import { useAuth } from '@/hooks';
+import { useHistoryStore } from '@/store/historyStore';
+import { useAuth } from '../../hooks/useAuth';
 import type { Reservation, Room, User } from '@/types';
 
 type ViewMode = 'table' | 'grid';

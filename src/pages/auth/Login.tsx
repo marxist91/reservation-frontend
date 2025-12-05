@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '@/hooks';
-import { LoginForm } from '@/components/auth';
+import { useAuth } from '../../hooks/useAuth';
+import LoginForm from '../../components/auth/LoginForm';
 import toast from 'react-hot-toast';
 import {
   Container,

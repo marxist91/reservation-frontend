@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAuthStore } from '@/store';
+import { useAuthStore } from '../../store/authStore';
 import { usersAPI } from '@/api/users';
 import toast from 'react-hot-toast';
 import {

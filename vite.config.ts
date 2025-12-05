@@ -1,17 +1,19 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import checker from 'vite-plugin-checker'
-import path from 'path'
+import tsconfigPaths from 'vite-tsconfig-paths'
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
+    tsconfigPaths({
+      projects: ['./tsconfig.json'],
+    }),
     react({
       babel: {
         plugins: [['babel-plugin-react-compiler']],
       },
     }),
-    // Plugin pour vérifier TypeScript et ESLint pendant le dev
     checker({
       typescript: true,
       eslint: {
@@ -19,11 +21,6 @@ export default defineConfig({
       },
     }),
   ],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
-  },
   server: {
     // Rediriger toutes les routes vers index.html pour le SPA
     historyApiFallback: true,
@@ -33,26 +30,18 @@ export default defineConfig({
   // Configuration optimisée pour le build en production
   build: {
     target: 'es2020',
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true, // Retirer les console.log en production
-        drop_debugger: true,
-      },
-    },
+    minify: false, // Désactivé temporairement pour debug
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-mui': ['@mui/material', '@mui/icons-material'],
-          'vendor-query': ['@tanstack/react-query'],
-          'vendor-charts': ['recharts'],
-        },
+        // Désactivé temporairement
+        // manualChunks: {
+        //   'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+        //   'vendor-mui': ['@mui/material', '@mui/icons-material'],
+        //   'vendor-query': ['@tanstack/react-query'],
+        //   'vendor-charts': ['recharts'],
+        // },
       },
     },
-    // Augmenter la limite de taille pour les gros chunks
-    chunkSizeWarningLimit: 1000,
-    // Source maps pour le debugging en production
-    sourcemap: true,
+    sourcemap: false, // Désactivé pour accélérer
   },
 })

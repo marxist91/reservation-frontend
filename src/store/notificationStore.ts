@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import notificationsApi from '../api/notifications';
+import notificationsApi from '@/api/notifications';
 import type { Notification } from '@/types';
 import { NotificationType } from '@/types';
 

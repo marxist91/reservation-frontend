@@ -3,7 +3,7 @@
  * Ce composant montre comment intégrer userStore, formatters, validators et constants
  */
 import { useState } from 'react';
-import type { UserRole } from '@/types';
+import type { UserRole, User } from '@/types';
 import {
   Box,
   Paper,
@@ -21,7 +21,7 @@ import {
 } from '@mui/material';
 
 // Import du store
-import { useUserStore } from '../../store';
+import { useUserStore } from '../../store/userStore';
 
 // Import des utilitaires
 import { formatFullName, formatRole, formatDateTime } from '../../utils/formatters';
@@ -164,7 +164,7 @@ const UserStoreExample: React.FC = () => {
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedUsers.map((user) => (
+              paginatedUsers.map((user: User) => (
                 <TableRow key={user.id}>
                   <TableCell>{user.id}</TableCell>
                   <TableCell>

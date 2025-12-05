@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient, type UseMutationResult, type UseQueryResult } from '@tanstack/react-query';
 import { usersAPI } from '@/api/users';
-import { useAuthStore } from '@/store';
+import { useAuthStore } from '@/store/authStore';
 import toast from 'react-hot-toast';
 import type { User, UserFormData, PasswordChangeData, UserRole } from '@/types';
 

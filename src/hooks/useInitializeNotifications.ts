@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
-import { useNotificationStore } from '@/store';
-import { useHistoryStore } from '@/store';
+import { useNotificationStore } from '@/store/notificationStore';
+import { useHistoryStore } from '@/store/historyStore';
 
 /**
  * Hook pour initialiser les notifications et l'historique au chargement de l'application

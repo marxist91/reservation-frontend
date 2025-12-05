@@ -30,8 +30,8 @@ import {
   Download as DownloadIcon,
   Refresh as RefreshIcon,
 } from '@mui/icons-material';
-import { useHistoryStore } from '@/store';
-import { useAuthStore } from '@/store';
+import { useHistoryStore } from '@/store/historyStore';
+import { useAuthStore } from '../../store/authStore';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 

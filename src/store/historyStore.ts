@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import historyApi from '../api/history';
+import historyApi from '@/api/history';
 import type { Reservation, Room, User } from '@/types';
 
 type HistoryType = 
