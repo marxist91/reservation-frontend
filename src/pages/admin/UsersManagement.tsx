@@ -29,6 +29,7 @@ import {
   Tooltip,
   InputAdornment,
 } from '@mui/material';
+import { formatDateTime } from '@/utils/formatters';
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
@@ -275,7 +276,7 @@ const UsersManagement: React.FC = () => {
                     />
                   </TableCell>
                   <TableCell>
-                    {new Date(user.created_at).toLocaleDateString('fr-FR')}
+                    {formatDateTime(user.created_at)}
                   </TableCell>
                   <TableCell align="center">
                     <Tooltip title="Modifier">

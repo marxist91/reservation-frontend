@@ -39,6 +39,7 @@
     
     /* Advanced */
     "useDefineForClassFields": true,
+    "ignoreDeprecations": "5.0",
     
     /* Path Mapping */
     "baseUrl": ".",

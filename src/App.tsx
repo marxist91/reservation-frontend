@@ -3,10 +3,15 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 
 // Pages Auth
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
+
+// Pages Public
+import LandingPage from './pages/public/LandingPage';
 
 // Pages User
 import UserDashboard from './pages/user/Dashboard';
@@ -24,6 +29,8 @@ import ReservationsManagement from './pages/admin/ReservationsManagement';
 import AdminNotifications from './pages/admin/AdminNotifications';
 import AdminHistory from './pages/admin/AdminHistory';
 import Statistics from './pages/admin/Statistics';
+import Departments from './pages/admin/Departments';
+import Settings from './pages/admin/Settings';
 
 // Pages Autres
 import NotFound from './pages/NotFound';
@@ -195,9 +202,13 @@ const App: React.FC = () => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <Toaster position="top-right" />
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <BrowserRouter>
+            <Toaster position="top-right" />
           <Routes>
+            {/* Page d'accueil publique */}
+            <Route path="/" element={<LandingPage />} />
+            
             {/* Routes publiques */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
@@ -227,7 +238,7 @@ const App: React.FC = () => {
               <Route
                 path="/admin"
                 element={
-                  <ProtectedRoute requiredRole={ADMIN_ROLE}>
+                  <ProtectedRoute requiredRole={[ADMIN_ROLE, 'responsable']}>
                     <AdminDashboard />
                   </ProtectedRoute>
                 }
@@ -251,7 +262,7 @@ const App: React.FC = () => {
               <Route
                 path="/admin/reservations"
                 element={
-                  <ProtectedRoute requiredRole={ADMIN_ROLE}>
+                  <ProtectedRoute requiredRole={[ADMIN_ROLE, 'responsable']}>
                     <ReservationsManagement />
                   </ProtectedRoute>
                 }
@@ -259,7 +270,7 @@ const App: React.FC = () => {
               <Route
                 path="/admin/notifications"
                 element={
-                  <ProtectedRoute requiredRole={ADMIN_ROLE}>
+                  <ProtectedRoute requiredRole={[ADMIN_ROLE, 'responsable']}>
                     <AdminNotifications />
                   </ProtectedRoute>
                 }
@@ -267,7 +278,7 @@ const App: React.FC = () => {
               <Route
                 path="/admin/history"
                 element={
-                  <ProtectedRoute requiredRole={ADMIN_ROLE}>
+                  <ProtectedRoute requiredRole={[ADMIN_ROLE, 'responsable']}>
                     <AdminHistory />
                   </ProtectedRoute>
                 }
@@ -275,8 +286,24 @@ const App: React.FC = () => {
               <Route
                 path="/admin/statistics"
                 element={
-                  <ProtectedRoute requiredRole={ADMIN_ROLE}>
+                  <ProtectedRoute requiredRole={[ADMIN_ROLE, 'responsable']}>
                     <Statistics />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/departments"
+                element={
+                  <ProtectedRoute requiredRole={ADMIN_ROLE}>
+                    <Departments />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/settings"
+                element={
+                  <ProtectedRoute requiredRole={ADMIN_ROLE}>
+                    <Settings />
                   </ProtectedRoute>
                 }
               />
@@ -286,7 +313,8 @@ const App: React.FC = () => {
             <Route path="/" element={<Navigate to="/dashboard" />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </BrowserRouter>
+          </BrowserRouter>
+        </LocalizationProvider>
       </QueryClientProvider>
     </ThemeProvider>
   );

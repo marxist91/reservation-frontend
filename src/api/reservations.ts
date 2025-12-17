@@ -27,7 +27,14 @@ interface ReservationsAPIResponse {
 }
 
 export const reservationsAPI = {
-  // Récupérer toutes les réservations (admin)
+  // Récupérer toutes les réservations publiques (pour page d'accueil)
+  getAllPublic: async (params: Record<string, unknown> = {}): Promise<ReservationsAPIResponse> => {
+    const response = await apiClient.get<{ data: Reservation[] }>('/reservations/all-public', { params });
+    const data = response.data.data ?? [];
+    return { data: Array.isArray(data) ? data : [] };
+  },
+
+  // Récupérer toutes les réservations (admin, authentifié)
   getAll: async (params: Record<string, unknown> = {}): Promise<ReservationsAPIResponse> => {
     const response = await apiClient.get<GetAllResponse>('/reservations/all', { params });
     console.log('📡 API Response /reservations/all:', response.data);
@@ -67,6 +74,7 @@ export const reservationsAPI = {
         room_id: parseInt(String(multiData.room_id)),
         motif: multiData.motif ?? '',
         description: multiData.description ?? '',
+        department_id: (multiData as any).department_id ?? multiData.departement ?? null,
         isMultiDay: multiData.isMultiDay ?? false,
         date_debut: multiData.date_debut,
         date_fin: multiData.date_fin,
@@ -92,6 +100,7 @@ export const reservationsAPI = {
         heure_fin: formatTime(firstSlot?.heure_fin ?? singleData.heure_fin),
         motif: singleData.motif ?? '',
         description: multiData.description ?? '',
+        department_id: (multiData as any).department_id ?? multiData.departement ?? null,
         nombre_participants: multiData.nombre_participants ?? 1,
         equipements_supplementaires: multiData.equipements_supplementaires ?? null,
       };
@@ -108,9 +117,9 @@ export const reservationsAPI = {
     return response.data;
   },
 
-  // Annuler une réservation
+  // Annuler une réservation (route dédiée pour permettre au créateur d'annuler)
   cancel: async (id: number): Promise<ApiResponse<Reservation>> => {
-    const response = await apiClient.put<ApiResponse<Reservation>>(`/reservations/update/${id}`, { statut: 'annulee' });
+    const response = await apiClient.put<ApiResponse<Reservation>>(`/reservations/cancel/${id}`);
     return response.data;
   },
 
@@ -142,10 +151,20 @@ export const reservationsAPI = {
   },
 
   // Refuser une réservation (admin)
-  reject: async (id: number, rejection_reason?: string): Promise<ApiResponse<Reservation>> => {
+  reject: async (
+    id: number, 
+    rejection_reason?: string,
+    proposed_alternative?: {
+      proposed_room_id: number;
+      proposed_date_debut: string;
+      proposed_date_fin: string;
+      motif?: string;
+    }
+  ): Promise<ApiResponse<Reservation>> => {
     const response = await apiClient.put<ApiResponse<Reservation>>(`/reservations/validate/${id}`, { 
       action: 'refuser',
-      rejection_reason 
+      rejection_reason,
+      proposed_alternative
     });
     return response.data;
   },

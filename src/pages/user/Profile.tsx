@@ -112,8 +112,7 @@ const Profile: React.FC = () => {
 
       <Grid container spacing={3}>
         {/* Informations personnelles */}
-        {/* @ts-expect-error MUI Grid item prop */}
-        <Grid item xs={12} md={8}>
+        <Grid size={{ xs: 12, md: 8 }}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
               Informations personnelles
@@ -122,8 +121,7 @@ const Profile: React.FC = () => {
 
             <form onSubmit={handleProfileSubmit}>
               <Grid container spacing={2}>
-                {/* @ts-expect-error MUI Grid item prop */}
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField
                     fullWidth
                     label="Nom"
@@ -132,8 +130,7 @@ const Profile: React.FC = () => {
                     required
                   />
                 </Grid>
-                {/* @ts-expect-error MUI Grid item prop */}
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField
                     fullWidth
                     label="Prénom"
@@ -142,8 +139,7 @@ const Profile: React.FC = () => {
                     required
                   />
                 </Grid>
-                {/* @ts-expect-error MUI Grid item prop */}
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                   <TextField
                     fullWidth
                     label="Email"
@@ -155,8 +151,7 @@ const Profile: React.FC = () => {
                     helperText="L'email ne peut pas être modifié"
                   />
                 </Grid>
-                {/* @ts-expect-error MUI Grid item prop */}
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                   <TextField
                     fullWidth
                     label="Téléphone"
@@ -164,8 +159,7 @@ const Profile: React.FC = () => {
                     onChange={(e) => setFormData({ ...formData, telephone: e.target.value })}
                   />
                 </Grid>
-                {/* @ts-expect-error MUI Grid item prop */}
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                   <Button
                     type="submit"
                     variant="contained"
@@ -194,8 +188,7 @@ const Profile: React.FC = () => {
 
             <form onSubmit={handlePasswordSubmit}>
               <Grid container spacing={2}>
-                {/* @ts-expect-error MUI Grid item prop */}
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                   <TextField
                     fullWidth
                     label="Mot de passe actuel"
@@ -205,8 +198,7 @@ const Profile: React.FC = () => {
                     required
                   />
                 </Grid>
-                {/* @ts-expect-error MUI Grid item prop */}
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField
                     fullWidth
                     label="Nouveau mot de passe"
@@ -217,8 +209,7 @@ const Profile: React.FC = () => {
                     helperText="Min. 8 caractères, 1 majuscule, 1 chiffre, 1 caractère spécial"
                   />
                 </Grid>
-                {/* @ts-expect-error MUI Grid item prop */}
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField
                     fullWidth
                     label="Confirmer le mot de passe"
@@ -228,8 +219,7 @@ const Profile: React.FC = () => {
                     required
                   />
                 </Grid>
-                {/* @ts-expect-error MUI Grid item prop */}
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                   <Button
                     type="submit"
                     variant="outlined"
@@ -245,8 +235,7 @@ const Profile: React.FC = () => {
         </Grid>
 
         {/* Carte profil */}
-        {/* @ts-expect-error MUI Grid item prop */}
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Paper sx={{ p: 3, textAlign: 'center' }}>
             <Avatar
               sx={{

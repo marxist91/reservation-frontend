@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useReservations } from '../../hooks/useReservations';
-import { formatTimeRange, formatFullName } from '@/utils/formatters';
+import useAuth from '@/hooks/useAuth';
+import { formatTimeRange, formatFullName, formatDateTime } from '@/utils/formatters';
 import { RESERVATION_STATUS_COLORS, RESERVATION_STATUS_LABELS } from '@/utils/constants';
 import type { Reservation } from '@/types';
 import {
@@ -29,7 +30,7 @@ import {
 
 const getStatusBgColor = (statut: string | undefined): string => {
   if (statut === 'rejetee' || statut === 'refusee') return '#d32f2f';
-  if (statut === 'annulee') return '#ed6c02';
+  if (statut === 'annulee') return '#777775de';
   if (statut === 'validee' || statut === 'confirmee') return '#2e7d32';
   if (statut === 'en_attente') return '#ed6c02';
   return '#1976d2';
@@ -79,7 +80,8 @@ const Calendar: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('month');
 
-  const { reservations = [], isLoading } = useReservations();
+  const { reservations = [], isLoading, cancelReservation } = useReservations();
+  const { user, canPerform } = useAuth();
 
   const daysInMonth = useMemo(() => 
     getDaysInMonth(currentYear, currentMonth),
@@ -253,8 +255,7 @@ const Calendar: React.FC = () => {
       </Box>
 
       <Grid container spacing={3}>
-        {/* @ts-expect-error MUI Grid item prop */}
-        <Grid item xs={12} lg={8}>
+        <Grid size={{ xs: 12, lg: 8 }}>
           <Paper sx={{ p: 2 }}>
             <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
               <IconButton onClick={viewMode === 'month' ? goToPreviousMonth : goToPreviousWeek}>
@@ -575,8 +576,7 @@ const Calendar: React.FC = () => {
           </Paper>
         </Grid>
 
-        {/* @ts-expect-error MUI Grid item prop */}
-        <Grid item xs={12} lg={4}>
+        <Grid size={{ xs: 12, lg: 4 }}>
           <Paper 
             elevation={3}
             sx={{ 
@@ -644,7 +644,7 @@ const Calendar: React.FC = () => {
                             },
                           }}
                         >
-                          <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                             <Box display="flex" justifyContent="space-between" alignItems="start" mb={1.5}>
                               <Box flex={1}>
                                 <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
@@ -700,30 +700,74 @@ const Calendar: React.FC = () => {
                               {reservation.motif || 'Aucun motif spécifié'}
                             </Typography>
 
-                            {reservation.utilisateur && (
-                              <Box 
-                                display="flex" 
-                                alignItems="center" 
-                                gap={1}
-                                sx={{ pt: 1, borderTop: '1px solid', borderColor: 'divider' }}
-                              >
-                                <Avatar 
-                                  sx={{ 
-                                    width: 28, 
-                                    height: 28, 
-                                    fontSize: '0.75rem',
-                                    bgcolor: 'primary.main',
-                                    fontWeight: 'bold',
-                                  }}
-                                >
-                                  {reservation.utilisateur.prenom?.[0]}
-                                  {reservation.utilisateur.nom?.[0]}
-                                </Avatar>
-                                <Typography variant="caption" fontWeight="medium">
-                                  {formatFullName(reservation.utilisateur.prenom, reservation.utilisateur.nom)}
-                                </Typography>
-                              </Box>
-                            )}
+                            {(() => {
+                              const userAny = reservation.utilisateur as any;
+                              const deptName = reservation.department?.name || reservation.departement || userAny?.department?.name || userAny?.departement || null;
+                              const createdRaw = (reservation as any).createdAt || (reservation as any).created_at || (reservation as any).created || null;
+                              return (
+                                <>
+                                  {deptName && (
+                                    <Box sx={{ mt: 1 }}> 
+                                      <Typography variant="caption" color="text.secondary">Département</Typography>
+                                      <Typography variant="body2">{deptName}</Typography>
+                                    </Box>
+                                  )}
+
+                                  {createdRaw && (
+                                    <Box sx={{ mt: 1 }}>
+                                      <Typography variant="caption" color="text.secondary">Créée le</Typography>
+                                      <Typography variant="body2">{formatDateTime(createdRaw)}</Typography>
+                                    </Box>
+                                  )}
+
+                                  {reservation.utilisateur && (
+                                    <Box 
+                                      display="flex" 
+                                      alignItems="center" 
+                                      gap={1}
+                                      sx={{ pt: deptName || createdRaw ? 1 : 0, borderTop: deptName || createdRaw ? '1px solid' : 'none', borderColor: 'divider' }}
+                                    >
+                                      <Avatar 
+                                        sx={{ 
+                                          width: 28, 
+                                          height: 28, 
+                                          fontSize: '0.75rem',
+                                          bgcolor: 'primary.main',
+                                          fontWeight: 'bold',
+                                        }}
+                                      >
+                                        {reservation.utilisateur.prenom?.[0]}
+                                        {reservation.utilisateur.nom?.[0]}
+                                      </Avatar>
+                                      <Typography variant="caption" fontWeight="medium">
+                                        {formatFullName(reservation.utilisateur.prenom, reservation.utilisateur.nom)}
+                                      </Typography>
+                                    </Box>
+                                  )}
+                                  {/* Actions: allow creator (or admin) to cancel their reservation */}
+                                  {canPerform('cancel_own_reservation') && (user?.id === reservation.user_id || user?.role === 'admin') && reservation.statut !== 'annulee' && (
+                                    <Box display="flex" justifyContent="flex-end" mt={2}>
+                                      <Button
+                                        variant="outlined"
+                                        color="error"
+                                        size="small"
+                                        onClick={() => {
+                                          const ok = window.confirm('Confirmez-vous l\'annulation de cette réservation ?');
+                                          if (!ok) return;
+                                          try {
+                                            cancelReservation.mutate(reservation.id as number);
+                                          } catch (e) {
+                                            console.error('Erreur annulation:', e);
+                                          }
+                                        }}
+                                      >
+                                        Annuler
+                                      </Button>
+                                    </Box>
+                                  )}
+                                </>
+                              );
+                            })()}
                           </CardContent>
                         </Card>
                       ))}

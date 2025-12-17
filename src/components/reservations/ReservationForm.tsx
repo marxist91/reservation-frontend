@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import type { Room, Reservation } from '@/types';
 import {
   Dialog,
@@ -22,6 +22,7 @@ import {
   Add as AddIcon,
   Delete as DeleteIcon,
 } from '@mui/icons-material';
+import apiClient from '@/api/client';
 import { format, addHours, differenceInDays } from 'date-fns';
 
 interface TimeSlot {
@@ -36,6 +37,21 @@ interface ReservationFormData {
   motif: string;
   description: string;
 }
+
+const DEFAULT_DEPARTMENTS = [
+  'Direction générale',
+  'Secrétariat général',
+  'Direction des affaires juridiques',
+  "Direction des ressources humaines",
+  'Direction commerciale',
+  "Direction de l'exploitation",
+  'Direction technique',
+  'Direction financière et comptable',
+  'Direction de la capitainerie',
+  'Direction du centre médico social',
+  "Direction des systèmes d'information",
+  'PRMP',
+];
 
 // Helper pour obtenir les dates initiales
 const getInitialDates = (): { date: string; heure_debut: string; heure_fin: string } => {
@@ -77,6 +93,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
     date_fin: initialDates.date,
     motif: '',
     description: '',
+    // departement sera stocké séparément (string)
   });
   
   // Créneaux horaires multiples
@@ -91,6 +108,37 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
   const [isMultiDay, setIsMultiDay] = useState(false);
   
   const [error, setError] = useState('');
+  // Liste des départements (modifiable par l'utilisateur)
+  const [departments, setDepartments] = useState<any[]>([]);
+  const [selectedDepartmentId, setSelectedDepartmentId] = useState<number | null>(null);
+  const [addDeptOpen, setAddDeptOpen] = useState(false);
+  const [newDeptName, setNewDeptName] = useState('');
+
+  // Charger les départements depuis l'API au montage
+  useEffect(() => {
+    (async () => {
+      try {
+        const resp = await apiClient.get('/departments');
+        const data = resp.data?.data ?? [];
+        if (Array.isArray(data) && data.length > 0) {
+          setDepartments(data);
+          // par défaut sélectionner le premier si non choisi
+          if (!selectedDepartmentId && data.length > 0) setSelectedDepartmentId(data[0].id ?? null);
+        }
+      } catch (e) {
+        // ignore: on garde les valeurs par défaut
+        console.warn('Impossible de charger les départements', e);
+        // Utiliser la liste par défaut si l'API est indisponible
+        const fallback = DEFAULT_DEPARTMENTS.map((name, i) => ({ id: -(i + 1), name }));
+        setDepartments(fallback);
+        if (!selectedDepartmentId && fallback.length > 0) {
+          const first = fallback[0];
+          const id = first && typeof first.id === 'number' ? first.id : null;
+          setSelectedDepartmentId(id);
+        }
+      }
+    })();
+  }, []);
 
   // Réinitialiser le formulaire quand le dialog s'ouvre
   const handleDialogEnter = (): void => {
@@ -146,6 +194,48 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
   const handleChange = (field: keyof ReservationFormData) => (event: React.ChangeEvent<HTMLInputElement>): void => {
     setFormData({ ...formData, [field]: event.target.value });
     setError('');
+  };
+
+  const handleDepartmentChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = event.target.value;
+    if (raw === '' || raw === null || raw === undefined) {
+      setSelectedDepartmentId(null);
+      setError('');
+      return;
+    }
+    const parsed = Number(raw);
+    setSelectedDepartmentId(Number.isFinite(parsed) ? parsed : null);
+    setError('');
+  };
+
+  const openAddDept = () => {
+    setNewDeptName('');
+    setAddDeptOpen(true);
+  };
+
+  const confirmAddDept = () => {
+    const name = newDeptName.trim();
+    if (!name) return;
+    (async () => {
+      try {
+        // Appeler l'API pour créer le département
+        const resp = await apiClient.post('/departments', { name });
+        const dep = resp.data?.data ?? { id: null, name };
+        const depName = dep.name || name;
+        // Mettre à jour la liste locale
+        setDepartments(prev => [dep, ...prev.filter(d => d.name?.toLowerCase() !== depName.toLowerCase())]);
+        setSelectedDepartmentId(dep.id ?? null);
+      } catch (e) {
+        console.warn('Erreur création département:', e);
+        // Fallback local
+        if (!departments.some(d => d.name?.toLowerCase() === name.toLowerCase())) {
+          setDepartments(prev => [{ id: null, name }, ...prev]);
+        }
+        setSelectedDepartmentId(null);
+      } finally {
+        setAddDeptOpen(false);
+      }
+    })();
   };
   
   const handleTimeSlotChange = (index: number, field: keyof TimeSlot) => (event: React.ChangeEvent<HTMLInputElement>): void => {
@@ -272,6 +362,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
         heure_debut: slot.heure_debut,
         heure_fin: slot.heure_fin,
       })),
+      department_id: selectedDepartmentId,
     });
   };
 
@@ -324,6 +415,28 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
                 </Typography>
               </Box>
             )}
+
+            {/* Département */}
+            <Box display="flex" gap={1} alignItems="center">
+              <TextField
+                fullWidth
+                select
+                label="Département"
+                value={selectedDepartmentId ?? ''}
+                onChange={handleDepartmentChange}
+                helperText="Sélectionnez le département du demandeur"
+              >
+                {departments.map((d: any) => (
+                  <MenuItem key={d.id ?? d.name} value={d.id ?? ''}>
+                    {d.name ?? d}
+                  </MenuItem>
+                ))}
+              </TextField>
+
+              <Button variant="outlined" size="small" onClick={openAddDept} sx={{ whiteSpace: 'nowrap' }}>
+                Ajouter
+              </Button>
+            </Box>
 
             {/* Mode multi-jours */}
             <FormControlLabel
@@ -442,6 +555,24 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
               required
               placeholder="Ex: Formation, Réunion d'équipe, Présentation..."
             />
+
+            {/* Dialog pour ajouter un département */}
+            <Dialog open={addDeptOpen} onClose={() => setAddDeptOpen(false)}>
+              <DialogTitle>Ajouter un département</DialogTitle>
+              <DialogContent>
+                <TextField
+                  fullWidth
+                  label="Nom du département"
+                  value={newDeptName}
+                  onChange={(e) => setNewDeptName(e.target.value)}
+                  placeholder="Ex: Direction marketing"
+                />
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => setAddDeptOpen(false)}>Annuler</Button>
+                <Button onClick={confirmAddDept} variant="contained">Ajouter</Button>
+              </DialogActions>
+            </Dialog>
 
             <TextField
               fullWidth

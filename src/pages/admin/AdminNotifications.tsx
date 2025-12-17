@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNotificationStore } from '@/store/notificationStore';
 import { useNavigate } from 'react-router-dom';
-import { formatDistanceToNow, format } from 'date-fns';
+import { formatDistanceToNow, format, isValid } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import {
   Box,
@@ -225,9 +225,13 @@ const AdminNotifications: React.FC = () => {
                           {notification.message}
                         </Typography>
                         <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                          {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true, locale: fr })}
-                          {' • '}
-                          {format(new Date(notification.created_at), 'dd/MM/yyyy HH:mm')}
+                          {(() => {
+                            const dt = notification.created_at ? new Date(notification.created_at) : null;
+                            if (dt && isValid(dt)) {
+                              return `${formatDistanceToNow(dt, { addSuffix: true, locale: fr })} • ${format(dt, 'dd/MM/yyyy HH:mm')}`;
+                            }
+                            return 'Il y a peu de temps';
+                          })()}
                         </Typography>
                       </Box>
                     }

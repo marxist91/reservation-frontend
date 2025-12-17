@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useReservations } from '../../hooks/useReservations';
 import ReservationCard from '@/components/reservations/ReservationCard';
+import AlternativeProposals from '@/components/alternatives/AlternativeProposals';
 import type { Reservation } from '@/types';
 import {
   Box,
@@ -33,11 +34,40 @@ import {
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { formatDateTime } from '@/utils/formatters';
+import { useQuery } from '@tanstack/react-query';
+import { departmentsAPI } from '@/api/departments';
+import { usersAPI } from '@/api/users';
 
 const MyReservations: React.FC = () => {
   const { myReservations: reservations, isLoading, cancelReservation } = useReservations();
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+    const [fetchedUser, setFetchedUser] = useState<any | null>(null);
+
+    const { data: departments = [] } = useQuery({
+      queryKey: ['departments'],
+      queryFn: departmentsAPI.getAll,
+      staleTime: 5 * 60 * 1000,
+    });
+
+    useEffect(() => {
+      let mounted = true;
+      const loadUser = async () => {
+        if (dialogOpen && selectedReservation?.utilisateur?.id) {
+          try {
+            const u = await usersAPI.getById(selectedReservation.utilisateur.id);
+            if (mounted) setFetchedUser(u ?? null);
+          } catch (e) {
+            if (mounted) setFetchedUser(null);
+          }
+        } else {
+          setFetchedUser(null);
+        }
+      };
+      loadUser();
+      return () => { mounted = false; };
+    }, [dialogOpen, selectedReservation]);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [tabValue, setTabValue] = useState(0);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -56,12 +86,39 @@ const MyReservations: React.FC = () => {
   const myReservations = reservations || [];
 
   const filteredReservations = (): Reservation[] => {
+    let filtered: Reservation[];
     switch (tabValue) {
-      case 1: return myReservations.filter(r => r.statut === 'en_attente');
-      case 2: return myReservations.filter(r => ['confirmee', 'validee'].includes(r.statut || ''));
-      case 3: return myReservations.filter(r => ['annulee', 'refusee', 'rejetee'].includes(r.statut || ''));
-      default: return myReservations;
+      case 1: filtered = myReservations.filter(r => r.statut === 'en_attente'); break;
+      case 2: filtered = myReservations.filter(r => ['confirmee', 'validee'].includes(r.statut || '')); break;
+      case 3: filtered = myReservations.filter(r => ['annulee', 'refusee', 'rejetee'].includes(r.statut || '')); break;
+      default: filtered = myReservations;
     }
+    
+    // Tri intelligent pour les réservations validées/confirmées
+    return filtered.sort((a, b) => {
+      const isValidatedA = a.statut === 'validee' || a.statut === 'confirmee';
+      const isValidatedB = b.statut === 'validee' || b.statut === 'confirmee';
+      
+      if (isValidatedA && isValidatedB) {
+        // Les deux sont validées, trier par date
+        const dateA = new Date(a.date || '');
+        const dateB = new Date(b.date || '');
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+        
+        const isPastA = dateA < now;
+        const isPastB = dateB < now;
+        
+        // Futures en haut (ordre croissant), passées en bas (ordre décroissant)
+        if (isPastA && !isPastB) return 1;  // B future avant A passée
+        if (!isPastA && isPastB) return -1; // A future avant B passée
+        if (!isPastA && !isPastB) return dateA.getTime() - dateB.getTime(); // Futures: plus proche en premier
+        return dateB.getTime() - dateA.getTime(); // Passées: plus récente en premier
+      }
+      
+      // Pour les autres statuts, tri par date (plus récentes en premier)
+      return new Date(b.date || '').getTime() - new Date(a.date || '').getTime();
+    });
   };
 
   const currentReservations = filteredReservations();
@@ -133,6 +190,9 @@ const MyReservations: React.FC = () => {
 
   return (
     <Box>
+      {/* Section Propositions Alternatives */}
+      <AlternativeProposals />
+
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h4">
           Mes Réservations
@@ -173,8 +233,7 @@ const MyReservations: React.FC = () => {
       ) : viewMode === 'grid' ? (
         <Grid container spacing={3}>
           {paginatedReservations.map((reservation) => (
-            /* @ts-expect-error MUI Grid item prop */
-            <Grid item xs={12} sm={6} md={4} key={reservation.id}>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={reservation.id}>
               <ReservationCard
                 reservation={reservation}
                 onView={handleView}
@@ -300,6 +359,17 @@ const MyReservations: React.FC = () => {
               <Typography variant="body2" gutterBottom>
                 <strong>Horaires:</strong> {selectedReservation.heure_debut || ''} - {selectedReservation.heure_fin || ''}
               </Typography>
+
+              <Typography variant="body2" gutterBottom>
+                <strong>Département:</strong> {(() => {
+                  const resAny: any = selectedReservation as any;
+                  const userAny = resAny.utilisateur as any;
+                  const deptId = resAny.department_id ?? resAny.departmentId ?? userAny?.department_id ?? userAny?.departmentId ?? null;
+                  const deptNameFromList = deptId && Array.isArray(departments) ? (departments.find((d: any) => d.id === deptId)?.name) : null;
+                  const deptName = resAny.department?.name || resAny.departement || userAny?.department?.name || userAny?.departement || fetchedUser?.department?.name || fetchedUser?.departement || deptNameFromList || null;
+                  return deptName || 'Non renseigné';
+                })()}
+              </Typography>
               <Typography variant="body2" component="div" gutterBottom>
                 <strong>Statut:</strong>{' '}
                 <Chip
@@ -327,7 +397,24 @@ const MyReservations: React.FC = () => {
               )}
               
               <Typography variant="body2" gutterBottom>
-                <strong>Créée le:</strong> {selectedReservation.created_at ? formatDate(selectedReservation.created_at) : 'N/A'}
+                <strong>Créée le:</strong> {(() => {
+                  const r: any = selectedReservation as any;
+                  const candidates = [
+                    r.createdAt,
+                    r.created_at,
+                    r.created,
+                    r.date_created,
+                    r.updatedAt,
+                    r.dateCreation,
+                  ];
+                  const found = candidates.find(c => c !== undefined && c !== null);
+                  if (found) return formatDateTime(found);
+                  // fallback to reservation date + heure_debut
+                  const datePart = r.date || r.date_debut || null;
+                  const timePart = r.heure_debut || null;
+                  if (datePart) return `${format(new Date(datePart), 'dd MMMM yyyy', { locale: fr })}${timePart ? ' à ' + timePart : ''}`;
+                  return 'N/A';
+                })()}
               </Typography>
             </Box>
           )}

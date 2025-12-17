@@ -225,29 +225,27 @@ const NotificationBell: React.FC = () => {
         </Box>
 
         {/* Actions */}
-        {notifications.length > 0 && (
-          <>
-            <Divider />
-            <Box sx={{ p: 1.5, display: 'flex', justifyContent: 'space-between' }}>
-              <Button
-                size="small"
-                onClick={() => {
-                  navigate('/notifications');
-                  handleClose();
-                }}
-              >
-                Voir tout
-              </Button>
-              <Button
-                size="small"
-                color="error"
-                onClick={handleClearAll}
-              >
-                Tout effacer
-              </Button>
-            </Box>
-          </>
-        )}
+        {notifications.length > 0 && [
+          <Divider key="actions-divider" />,
+          <Box key="actions-box" sx={{ p: 1.5, display: 'flex', justifyContent: 'space-between' }}>
+            <Button
+              size="small"
+              onClick={() => {
+                navigate('/notifications');
+                handleClose();
+              }}
+            >
+              Voir tout
+            </Button>
+            <Button
+              size="small"
+              color="error"
+              onClick={handleClearAll}
+            >
+              Tout effacer
+            </Button>
+          </Box>
+        ]}
       </Menu>
     </>
   );

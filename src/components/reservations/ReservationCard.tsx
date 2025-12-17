@@ -14,6 +14,7 @@ import {
   AccessTime as TimeIcon,
   MeetingRoom as RoomIcon,
   Person as PersonIcon,
+  Business as DepartmentIcon,
 } from '@mui/icons-material';
 import { formatDate } from '@/utils/formatters';
 import { RESERVATION_STATUS_COLORS, RESERVATION_STATUS_LABELS } from '@/utils/constants';
@@ -33,7 +34,7 @@ const getStatusBgColor = (statut: ReservationStatus): string => {
     return '#d32f2f'; // Rouge
   }
   if (statut === 'annulee') {
-    return '#ed6c02'; // Orange
+    return '#fdd835'; // Jaune (plus clair que l'orange)
   }
   if (statut === 'validee' || statut === 'confirmee') {
     return '#2e7d32'; // Vert
@@ -78,7 +79,10 @@ const ReservationCard: React.FC<ReservationCardProps> = ({
         borderLeft: 4,
         borderColor: getStatusBgColor(reservation.statut),
         ...(reservation.statut === 'rejetee' || reservation.statut === 'refusee' ? {
-          bgcolor: 'rgba(211, 47, 47, 0.05)' // Fond rouge très léger
+            bgcolor: 'rgba(211, 47, 47, 0.05)' // Fond rouge très léger
+          } : {}),
+        ...(reservation.statut === 'annulee' ? {
+          bgcolor: 'rgba(255, 235, 59, 0.12)' // Fond jaune léger pour annulation
         } : {})
       }}
     >
@@ -111,6 +115,18 @@ const ReservationCard: React.FC<ReservationCardProps> = ({
             {room?.nom || 'Salle non définie'}
           </Typography>
         </Box>
+
+        {(() => {
+          const userAny = reservation.utilisateur as any;
+          const deptName = reservation.department?.name || reservation.departement || userAny?.department?.name || userAny?.departement;
+          if (!deptName) return null;
+          return (
+            <Box display="flex" alignItems="center" gap={1} mb={1}>
+              <DepartmentIcon fontSize="small" color="action" />
+              <Typography variant="body2">{deptName}</Typography>
+            </Box>
+          );
+        })()}
 
         <Box display="flex" alignItems="center" gap={1} mb={1}>
           <EventIcon fontSize="small" color="action" />

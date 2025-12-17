@@ -91,8 +91,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading = false
       )}
 
       <Grid container spacing={2}>
-        {/* @ts-expect-error MUI Grid item prop typing issue */}
-        <Grid item xs={12} sm={6}>
+        <Grid size={{ xs: 12, sm: 6 }}>
           <TextField
             id="prenom"
             name="prenom"
@@ -112,8 +111,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading = false
             }}
           />
         </Grid>
-        {/* @ts-expect-error MUI Grid item prop typing issue */}
-        <Grid item xs={12} sm={6}>
+        <Grid size={{ xs: 12, sm: 6 }}>
           <TextField
             id="nom"
             name="nom"

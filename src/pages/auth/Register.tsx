@@ -60,8 +60,7 @@ const Register: React.FC = () => {
 
           <form onSubmit={handleSubmit}>
             <Grid container spacing={2}>
-              {/* @ts-expect-error MUI Grid item prop typing issue with exactOptionalPropertyTypes */}
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   fullWidth
                   label="Nom"
@@ -72,8 +71,7 @@ const Register: React.FC = () => {
                 />
               </Grid>
 
-              {/* @ts-expect-error MUI Grid item prop typing issue with exactOptionalPropertyTypes */}
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   fullWidth
                   label="Prénom"
@@ -84,8 +82,7 @@ const Register: React.FC = () => {
                 />
               </Grid>
 
-              {/* @ts-expect-error MUI Grid item prop typing issue with exactOptionalPropertyTypes */}
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
                   label="Email"
@@ -97,8 +94,7 @@ const Register: React.FC = () => {
                 />
               </Grid>
 
-              {/* @ts-expect-error MUI Grid item prop typing issue with exactOptionalPropertyTypes */}
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
                   label="Téléphone"
@@ -109,8 +105,7 @@ const Register: React.FC = () => {
                 />
               </Grid>
 
-              {/* @ts-expect-error MUI Grid item prop typing issue with exactOptionalPropertyTypes */}
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
                   label="Mot de passe"

@@ -1,4 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
 import { useQuery } from '@tanstack/react-query';
 import {
   Box,
@@ -19,8 +21,9 @@ import {
   ListItem,
   ListItemText,
   ListItemAvatar,
-  Divider,
+  
   SelectChangeEvent,
+  
 } from '@mui/material';
 import {
   TrendingUp,
@@ -48,16 +51,25 @@ import {
   AreaChart,
   Area,
 } from 'recharts';
-import { reservationsAPI } from '@/api/reservations';
+import Button from '@mui/material/Button';
+import Table from '@mui/material/Table';
+import TableHead from '@mui/material/TableHead';
+import TableBody from '@mui/material/TableBody';
+import TableRow from '@mui/material/TableRow';
+import TableCell from '@mui/material/TableCell';
+import Stack from '@mui/material/Stack';
+import { statsAPI } from '@/api/stats';
 import { roomsAPI } from '@/api/rooms';
 import { usersAPI } from '@/api/users';
-import type { Reservation, Room, User } from '@/types';
-import { format, startOfMonth, eachDayOfInterval, subMonths, parseISO } from 'date-fns';
+import type { Room, User } from '@/types';
+import { format, startOfMonth, subMonths, parseISO, endOfMonth } from 'date-fns';
+import { DatePicker } from '@mui/x-date-pickers';
+import TablePagination from '@mui/material/TablePagination';
 import { fr } from 'date-fns/locale';
 
 const COLORS = ['#1976d2', '#2e7d32', '#ed6c02', '#d32f2f', '#9c27b0', '#00897b'];
 
-type PeriodFilter = 'month' | 'quarter' | 'year';
+type PeriodFilter = 'month' | 'quarter' | 'year' | 'custom';
 
 interface TopSalle {
   nom: string;
@@ -78,7 +90,7 @@ interface StatutDataPoint {
   [key: string]: string | number;
 }
 
-interface TopUser {
+interface TopDepartment {
   name: string;
   count: number;
 }
@@ -100,18 +112,21 @@ interface StatsData {
   topSalles: TopSalle[];
   evolutionData: EvolutionDataPoint[];
   statutData: StatutDataPoint[];
-  topUsers: TopUser[];
+  topDepartments: TopDepartment[];
   roomOccupancy: RoomOccupancy[];
 }
 
 const Statistics: React.FC = () => {
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('month');
+  const [activeTab, setActiveTab] = useState<number>(0);
+  const [deptStatutFilter, setDeptStatutFilter] = useState<string>('');
+  const [customStart, setCustomStart] = useState<string>('');
+  const [customEnd, setCustomEnd] = useState<string>('');
+  const [page, setPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(20);
+  const [totalDepartments, setTotalDepartments] = useState<number>(0);
 
   // Récupération des données
-  const { data: reservationsData, isLoading: reservationsLoading } = useQuery<any>({
-    queryKey: ['reservations', 'admin'],
-    queryFn: () => reservationsAPI.getAll(),
-  });
 
   const { data: roomsData, isLoading: roomsLoading } = useQuery<Room[]>({
     queryKey: ['rooms'],
@@ -124,12 +139,7 @@ const Statistics: React.FC = () => {
     select: (data) => Array.isArray(data) ? data : (data.utilisateurs || []),
   });
 
-  const reservations: Reservation[] = useMemo(() => 
-    Array.isArray(reservationsData?.data) 
-      ? reservationsData.data 
-      : (Array.isArray(reservationsData) ? reservationsData : []),
-    [reservationsData]
-  );
+  // reservations list is available via reservationsData if needed; no local computation required
 
   const rooms: Room[] = useMemo(() => 
     Array.isArray(roomsData) ? roomsData : [],
@@ -141,127 +151,156 @@ const Statistics: React.FC = () => {
     [usersData]
   );
 
-  const isLoading = reservationsLoading || roomsLoading || usersLoading;
+  
 
-  // Calcul des statistiques
-  const stats: StatsData = useMemo(() => {
+  // Récupération des statistiques par département depuis le backend
+  const computeDateRange = (period: PeriodFilter) => {
     const now = new Date();
-    let startDate: Date;
-
-    switch (periodFilter) {
+    let start: Date;
+    switch (period) {
       case 'month':
-        startDate = startOfMonth(now);
+        start = startOfMonth(now);
         break;
       case 'quarter':
-        startDate = subMonths(now, 3);
+        start = subMonths(now, 3);
         break;
       case 'year':
-        startDate = subMonths(now, 12);
+        start = subMonths(now, 12);
+        break;
+      case 'custom':
+        if (customStart && customEnd) {
+          return { startStr: customStart, endStr: customEnd };
+        }
+        // fallback to month if custom values missing
+        start = startOfMonth(now);
         break;
       default:
-        startDate = startOfMonth(now);
+        start = startOfMonth(now);
     }
+    const startStr = format(start, 'yyyy-MM-dd');
+    // make end of period inclusive to cover reservations later in the month
+    const end = endOfMonth(now);
+    const endStr = format(end, 'yyyy-MM-dd');
+    return { startStr, endStr };
+  };
 
-    const filteredReservations = reservations.filter(r => {
-      const resDate = parseISO((r as any).createdAt || r.date);
-      return resDate >= startDate;
+  const { startStr, endStr } = computeDateRange(periodFilter);
+
+  const queryKey = ['stats', 'reservationsByDepartment', periodFilter, deptStatutFilter, customStart, customEnd, page, pageSize];
+
+  const buildParams = () => {
+    const p: any = { startDate: startStr, endDate: endStr, page, pageSize };
+    if (deptStatutFilter) p.statut = deptStatutFilter;
+    return p;
+  };
+
+  const { data: deptStatsData, isLoading: deptStatsLoading } = useQuery<{ data: any[]; total?: number } | undefined>({
+    queryKey,
+    queryFn: () => statsAPI.getReservationsByDepartment(buildParams()),
+    enabled: true,
+  });
+
+  // update total when data changes
+  useEffect(() => {
+    const d = deptStatsData as any;
+    if (d && typeof d.total !== 'undefined') setTotalDepartments(Number(d.total));
+    else setTotalDepartments(Array.isArray(d?.data) ? d.data.length : 0);
+  }, [deptStatsData]);
+
+  const exportCSV = (rows: any[]) => {
+    if (!rows || !rows.length) return;
+    const headers = ['Département', 'Réservations'];
+    const csv = [headers.join(',')].concat(rows.map(r => `${JSON.stringify(r.department_name)} , ${r.count}`)).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `departements_stats_${startStr}_to_${endStr}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Fetch all statistics from backend overview endpoint
+  const { data: overviewData, isLoading: overviewLoading } = useQuery<any>({
+    queryKey: ['stats', 'overview', periodFilter, deptStatutFilter, customStart, customEnd],
+    queryFn: () => statsAPI.getOverview({ startDate: startStr, endDate: endStr, statut: deptStatutFilter }),
+    enabled: true,
+  });
+
+  const isLoading = roomsLoading || usersLoading || overviewLoading || deptStatsLoading;
+
+  const stats: StatsData = useMemo(() => {
+    const o: any = overviewData || {};
+    const total = Number(o.total || 0);
+    const confirmed = Number(o.confirmed || 0);
+    const pending = Number(o.pending || 0);
+    const rejected = Number(o.rejected || 0);
+
+    // Map topSalles to expected shape
+    const topSalles: TopSalle[] = (o.topSalles || []).map((s: any) => ({ nom: s.nom || 'N/A', count: Number(s.count || 0) }));
+
+    // evolutionData from backend: convert date to formatted label for the chart
+    const evolutionData: EvolutionDataPoint[] = (o.evolutionData || []).map((d: any) => ({
+      date: format(new Date(d.day), 'dd MMM', { locale: fr }),
+      total: Number(d.total || 0),
+      confirmees: Number(d.confirmees || 0),
+      enAttente: Number(d.enAttente || 0),
+      rejetees: Number(d.rejetees || 0),
+    }));
+
+    // Aggregate statut data into friendly groups (Confirmées includes 'confirmee' and 'validee')
+    const statutMap: Record<string, number> = {};
+    (o.statutData || []).forEach((s: any) => {
+      const raw = String(s.name || '').toLowerCase();
+      const val = Number(s.value || 0);
+      if (['confirmee', 'validee'].includes(raw)) {
+        statutMap['Confirmées'] = (statutMap['Confirmées'] || 0) + val;
+      } else if (['rejetee', 'refusee', 'annulee'].includes(raw)) {
+        statutMap['Rejetées'] = (statutMap['Rejetées'] || 0) + val;
+      } else if (raw === 'en_attente' || raw === 'pending') {
+        statutMap['En attente'] = (statutMap['En attente'] || 0) + val;
+      } else if (raw === 'terminee') {
+        statutMap['Terminées'] = (statutMap['Terminées'] || 0) + val;
+      } else {
+        statutMap['Autres'] = (statutMap['Autres'] || 0) + val;
+      }
     });
+    const statutData: StatutDataPoint[] = Object.entries(statutMap).map(([name, value]) => ({ name, value }));
 
-    const confirmed = filteredReservations.filter(r => ['confirmee', 'validee'].includes(r.statut)).length;
-    const pending = filteredReservations.filter(r => r.statut === 'en_attente').length;
-    const rejected = filteredReservations.filter(r => ['rejetee', 'refusee', 'annulee'].includes(r.statut)).length;
-    const total = filteredReservations.length;
+    const topDepartments: TopDepartment[] = (o.topDepartments || []).map((d: any) => ({ name: d.department_name || d.name || 'Non renseigné', count: Number(d.count || 0) }));
 
-    const tauxValidation = total > 0 ? ((confirmed / total) * 100).toFixed(1) : '0';
-    const tauxRejet = total > 0 ? ((rejected / total) * 100).toFixed(1) : '0';
-
-    // Réservations par salle
-    const reservationsBySalle: Record<string, number> = {};
-    filteredReservations.forEach(r => {
-      const resAny = r as any;
-      const salleName = resAny.salle?.nom || resAny.Room?.nom || 'Non définie';
-      reservationsBySalle[salleName] = (reservationsBySalle[salleName] || 0) + 1;
-    });
-
-    // Salles les plus demandées
-    const topSalles: TopSalle[] = Object.entries(reservationsBySalle)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 5)
-      .map(([nom, count]) => ({ nom, count }));
-
-    // Évolution par jour (30 derniers jours)
-    const last30Days = eachDayOfInterval({
-      start: subMonths(now, 1),
-      end: now,
-    });
-
-    const evolutionData: EvolutionDataPoint[] = last30Days.map(day => {
-      const dayStr = format(day, 'yyyy-MM-dd');
-      const dayReservations = reservations.filter(r => {
-        const resDate = r.date || (r as any).createdAt;
-        return resDate?.startsWith(dayStr);
-      });
-
-      return {
-        date: format(day, 'dd MMM', { locale: fr }),
-        total: dayReservations.length,
-        confirmees: dayReservations.filter(r => ['confirmee', 'validee'].includes(r.statut)).length,
-        enAttente: dayReservations.filter(r => r.statut === 'en_attente').length,
-        rejetees: dayReservations.filter(r => ['rejetee', 'refusee', 'annulee'].includes(r.statut)).length,
-      };
-    });
-
-    // Répartition par statut
-    const statutData: StatutDataPoint[] = [
-      { name: 'Confirmées', value: reservations.filter(r => ['confirmee', 'validee'].includes(r.statut)).length },
-      { name: 'En attente', value: reservations.filter(r => r.statut === 'en_attente').length },
-      { name: 'Rejetées', value: reservations.filter(r => ['rejetee', 'refusee', 'annulee'].includes(r.statut)).length },
-    ].filter(s => s.value > 0);
-
-    // Utilisateurs les plus actifs
-    const userActivity: Record<string, number> = {};
-    reservations.forEach(r => {
-      const resAny = r as any;
-      const userName = `${resAny.utilisateur?.prenom || ''} ${resAny.utilisateur?.nom || 'Inconnu'}`.trim();
-      userActivity[userName] = (userActivity[userName] || 0) + 1;
-    });
-
-    const topUsers: TopUser[] = Object.entries(userActivity)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 5)
-      .map(([name, count]) => ({ name, count }));
-
-    // Taux d'occupation des salles
-    const roomOccupancy: RoomOccupancy[] = rooms.map(room => {
-      const roomReservations = reservations.filter(r => 
-        r.room_id === room.id && ['confirmee', 'validee'].includes(r.statut)
-      ).length;
-      
-      return {
-        nom: room.nom,
-        reservations: roomReservations,
-        capacite: room.capacite,
-        taux: roomReservations > 0 ? ((roomReservations / (total || 1)) * 100).toFixed(1) : '0',
-      };
-    }).sort((a, b) => b.reservations - a.reservations);
+    const roomOccupancy: RoomOccupancy[] = (o.roomOccupancy || []).map((r: any) => ({
+      nom: r.nom || 'N/A',
+      reservations: Number(r.reservations || 0),
+      capacite: Number(r.capacite || 0),
+      taux: ((Number(r.reservations || 0) / (total || 1)) * 100).toFixed(1),
+    }));
 
     return {
       total,
       confirmed,
       pending,
       rejected,
-      tauxValidation,
-      tauxRejet,
+      tauxValidation: o.tauxValidation ?? '0',
+      tauxRejet: o.tauxRejet ?? '0',
       topSalles,
       evolutionData,
       statutData,
-      topUsers,
+      topDepartments,
       roomOccupancy,
     };
-  }, [reservations, rooms, periodFilter]);
+  }, [overviewData, periodFilter, rooms]);
 
   const handlePeriodChange = (event: SelectChangeEvent<PeriodFilter>): void => {
     setPeriodFilter(event.target.value as PeriodFilter);
+  };
+
+  const handleTabChange = (_: any, newValue: number) => {
+    setActiveTab(newValue);
+  };
+
+  const handleDeptStatutChange = (e: SelectChangeEvent<string>) => {
+    setDeptStatutFilter(e.target.value as string);
   };
 
   if (isLoading) {
@@ -279,7 +318,7 @@ const Statistics: React.FC = () => {
         <Typography variant="h4" fontWeight={700}>
           📊 Statistiques et Analytiques
         </Typography>
-        <FormControl size="small" sx={{ minWidth: 200 }}>
+                <FormControl size="small" sx={{ minWidth: 200 }}>
           <InputLabel>Période</InputLabel>
           <Select
             value={periodFilter}
@@ -288,7 +327,8 @@ const Statistics: React.FC = () => {
           >
             <MenuItem value="month">Ce mois</MenuItem>
             <MenuItem value="quarter">3 derniers mois</MenuItem>
-            <MenuItem value="year">12 derniers mois</MenuItem>
+                    <MenuItem value="year">12 derniers mois</MenuItem>
+                    <MenuItem value="custom">Plage personnalisée</MenuItem>
           </Select>
         </FormControl>
       </Box>
@@ -541,8 +581,141 @@ const Statistics: React.FC = () => {
         </Grid>
       </Grid>
 
+      {/* Tabs */}
+      <Tabs value={activeTab} onChange={handleTabChange} aria-label="Stat tabs" sx={{ mb: 2 }}>
+        <Tab label="Général" />
+        <Tab label="Par département" />
+      </Tabs>
+
       {/* Top salles et utilisateurs */}
       <Grid container spacing={3} mb={3}>
+        {/* Show department tab only when selected */}
+        {activeTab === 1 && (
+          <Grid size={{ xs: 12, md: 12 }}>
+            <Paper sx={{ p: 2, mb: 2 }}>
+              <Box display="flex" gap={2} alignItems="center" mb={2}>
+                <FormControl size="small" sx={{ minWidth: 180 }}>
+                  <InputLabel>Période</InputLabel>
+                  <Select value={periodFilter} label="Période" onChange={handlePeriodChange}>
+                    <MenuItem value="month">Ce mois</MenuItem>
+                    <MenuItem value="quarter">3 derniers mois</MenuItem>
+                    <MenuItem value="year">12 derniers mois</MenuItem>
+                  </Select>
+                </FormControl>
+
+                <FormControl size="small" sx={{ minWidth: 220 }}>
+                  <InputLabel>Statut</InputLabel>
+                  <Select value={deptStatutFilter} label="Statut" onChange={handleDeptStatutChange}>
+                    <MenuItem value="">Tous</MenuItem>
+                    <MenuItem value="en_attente">En attente</MenuItem>
+                    <MenuItem value="validee">Validées</MenuItem>
+                    <MenuItem value="annulee">Annulée</MenuItem>
+                    <MenuItem value="rejetee">Rejetée</MenuItem>
+                  </Select>
+                </FormControl>
+                {periodFilter === 'custom' && (
+                  <Box display="flex" gap={2} alignItems="center">
+                    <DatePicker
+                      label="Date début"
+                      value={customStart ? parseISO(customStart) : null}
+                      onChange={(d: any) => {
+                        const v = d ? format(d, 'yyyy-MM-dd') : '';
+                        setCustomStart(v);
+                        setPage(1);
+                      }}
+                      slotProps={{ textField: { size: 'small' } }}
+                    />
+                    <DatePicker
+                      label="Date fin"
+                      value={customEnd ? parseISO(customEnd) : null}
+                      onChange={(d: any) => {
+                        const v = d ? format(d, 'yyyy-MM-dd') : '';
+                        setCustomEnd(v);
+                        setPage(1);
+                      }}
+                      slotProps={{ textField: { size: 'small' } }}
+                    />
+                  </Box>
+                )}
+              </Box>
+
+              <Typography variant="h6" fontWeight={600} mb={1}>
+                Top départements (par nombre de réservations)
+              </Typography>
+
+              {deptStatsLoading ? (
+                <Box display="flex" justifyContent="center" alignItems="center" minHeight={150}>
+                  <CircularProgress />
+                </Box>
+                  ) : (
+                <Box>
+                  {/** Use server data (deptStatsData) or overview topDepartments as fallback. Render departments on X axis and color per department */}
+                  {(() => {
+                    const serverRows = ((deptStatsData as any)?.data) || [];
+                    const hasServer = Array.isArray(serverRows) && serverRows.length > 0;
+                    const deptData = hasServer ? serverRows : (overviewData?.topDepartments || stats.topDepartments).map((d: any) => ({ department_name: d.department_name || d.name, count: d.count }));
+                    return (
+                      <ResponsiveContainer width="100%" height={360}>
+                        <BarChart data={deptData} barCategoryGap="5%" barGap={2}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="department_name" type="category" angle={-20} textAnchor="end" height={80} />
+                          <YAxis />
+                          <Tooltip />
+                          <Legend />
+                          <Bar dataKey="count" name="Réservations" barSize={14}>
+                            {deptData.map((_: any, index: number) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    );
+                  })()}
+                
+                    {/* Table + Export buttons */}
+                    <Box mt={2} mb={1} display="flex" justifyContent="space-between" alignItems="center">
+                      <Typography variant="subtitle1">Détail départements</Typography>
+                      <Stack direction="row" spacing={1}>
+                        <Button size="small" variant="outlined" onClick={() => exportCSV(((deptStatsData as any)?.data) || [])}>Exporter CSV</Button>
+                      </Stack>
+                    </Box>
+
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>#</TableCell>
+                          <TableCell>Département</TableCell>
+                          <TableCell align="right">Réservations</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                          {(((deptStatsData as any)?.data && (deptStatsData as any).data.length > 0) ? (deptStatsData as any).data : stats.topDepartments.map((d: any) => ({ department_name: d.name, count: d.count }))).map((row: any, idx: number) => (
+                            <TableRow key={row.department_id || row.department_name || idx}>
+                              <TableCell>{idx + 1}</TableCell>
+                              <TableCell>{row.department_name}</TableCell>
+                              <TableCell align="right">{row.count}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                    </Table>
+
+                    {/* Pagination controls (TablePagination provides rowsPerPage + page controls) */}
+                    <Box display="flex" alignItems="center" justifyContent="flex-end" mt={2}>
+                    <TablePagination
+                      component="div"
+                      count={totalDepartments || 0}
+                      page={Math.max(0, page - 1)}
+                      onPageChange={(_, newPage) => setPage(newPage + 1)}
+                      rowsPerPage={pageSize}
+                      onRowsPerPageChange={(e) => { const v = parseInt((e.target as HTMLInputElement).value, 10); setPageSize(v); setPage(1); }}
+                      rowsPerPageOptions={[10, 20, 50, 100]}
+                    />
+                  </Box>
+                </Box>
+              )}
+            </Paper>
+          </Grid>
+        )}
         {/* Salles les plus réservées */}
         {}
         <Grid size={{ xs: 12, md: 6 }}>
@@ -562,36 +735,39 @@ const Statistics: React.FC = () => {
           </Paper>
         </Grid>
 
-        {/* Utilisateurs les plus actifs */}
+        {/* Départements les plus actifs */}
         {}
         <Grid size={{ xs: 12, md: 6 }}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" fontWeight={600} mb={2}>
-              Top 5 - Utilisateurs les plus actifs
+              Top 5 - Départements les plus actifs
             </Typography>
             <List>
-              {stats.topUsers.map((user, index) => (
-                <Box key={index}>
-                  <ListItem>
+              {(((deptStatsData as any)?.data) || stats.topDepartments).slice(0, 5).map((dept: any, index: number) => {
+                // dept may be either { department_name, count } from server
+                // or { name, count } from local stats
+                const name = dept.department_name ?? dept.name ?? `Département ${index + 1}`;
+                const count = dept.count ?? dept.count ?? 0;
+                return (
+                  <ListItem key={name || index}>
                     <ListItemAvatar>
                       <Avatar sx={{ bgcolor: COLORS[index % COLORS.length] }}>
                         {index + 1}
                       </Avatar>
                     </ListItemAvatar>
                     <ListItemText
-                      primary={user.name}
-                      secondary={`${user.count} réservation${user.count > 1 ? 's' : ''}`}
+                      primary={name}
+                      secondary={`${count} réservation${count > 1 ? 's' : ''}`}
                     />
                     <Chip 
-                      label={user.count} 
+                      label={count} 
                       color="primary" 
                       size="small"
                       icon={<Star />}
                     />
                   </ListItem>
-                  {index < stats.topUsers.length - 1 && <Divider />}
-                </Box>
-              ))}
+                );
+              })}
             </List>
           </Paper>
         </Grid>
@@ -604,9 +780,7 @@ const Statistics: React.FC = () => {
         </Typography>
         <Grid container spacing={2}>
           {stats.roomOccupancy.map((room, index) => (
-            <>
-              {}
-              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
+              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={room.nom || index}>
                 <Box>
                   <Box display="flex" justifyContent="space-between" mb={1}>
                     <Typography variant="body2" fontWeight={600}>
@@ -638,7 +812,6 @@ const Statistics: React.FC = () => {
                   </Box>
                 </Box>
               </Grid>
-            </>
           ))}
         </Grid>
       </Paper>

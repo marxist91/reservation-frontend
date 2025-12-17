@@ -77,12 +77,23 @@ interface RoomCardProps {
   onView?: ((room: Room) => void) | undefined;
   compact?: boolean;
   showActions?: boolean;
+  // Si fourni, force l'affichage de la disponibilité pour un créneau horaire donné
+  isOccupiedAt?: boolean | null;
+  // Cache le badge de statut par défaut
+  hideStatusBadge?: boolean;
 }
 
-const RoomCard: React.FC<RoomCardProps> = ({ room, onReserve, onView, compact = false }) => {
+const RoomCard: React.FC<RoomCardProps> = ({ room, onReserve, onView, compact = false, isOccupiedAt = null, hideStatusBadge = false }) => {
   const [isFavorite, setIsFavorite] = useState(false);
-  const status = statusConfig[room.statut || 'disponible'] || statusConfig['disponible'];
-  const isAvailable = room.statut === 'disponible';
+  // Si une info d'occupation horaire est fournie, on la priorise
+  const computedStatusKey = isOccupiedAt === null ? (room.statut || 'disponible') : (isOccupiedAt ? 'occupe' : 'disponible');
+  const status = statusConfig[computedStatusKey] || statusConfig['disponible'];
+  const isAvailable = computedStatusKey === 'disponible';
+  
+  // Debug log (à retirer après diagnostic)
+  if (room.id <= 3) {
+    console.log(`🏢 Salle ${room.id} (${room.nom}): isOccupiedAt=${isOccupiedAt}, room.statut=${room.statut}, computedStatusKey=${computedStatusKey}`);
+  }
 
   const handleFavoriteClick = (e: React.MouseEvent): void => {
     e.stopPropagation();
@@ -146,21 +157,23 @@ const RoomCard: React.FC<RoomCardProps> = ({ room, onReserve, onView, compact = 
         />
 
         {/* Badge statut */}
-        <Chip
-          label={status?.label || 'Disponible'}
-          size="small"
-          sx={{
-            position: 'absolute',
-            top: 10,
-            left: 10,
-            bgcolor: status?.bg || '#dcfce7',
-            color: status?.color || '#22c55e',
-            fontWeight: 600,
-            fontSize: '0.7rem',
-            height: 22,
-            '& .MuiChip-label': { px: 1 },
-          }}
-        />
+        {!hideStatusBadge && (
+          <Chip
+            label={status?.label || 'Disponible'}
+            size="small"
+            sx={{
+              position: 'absolute',
+              top: 10,
+              left: 10,
+              bgcolor: status?.bg || '#dcfce7',
+              color: status?.color || '#22c55e',
+              fontWeight: 600,
+              fontSize: '0.7rem',
+              height: 22,
+              '& .MuiChip-label': { px: 1 },
+            }}
+          />
+        )}
 
         {/* Bouton favori */}
         <IconButton

@@ -197,8 +197,7 @@ const History: React.FC = () => {
 
       {/* Statistiques */}
       <Grid container spacing={2} mb={3}>
-        {/* @ts-expect-error MUI Grid item prop */}
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card>
             <CardContent>
               <Typography variant="h4" fontWeight="bold" color="primary.main">
@@ -210,8 +209,7 @@ const History: React.FC = () => {
             </CardContent>
           </Card>
         </Grid>
-        {/* @ts-expect-error MUI Grid item prop */}
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card>
             <CardContent>
               <Typography variant="h4" fontWeight="bold" color="success.main">
@@ -223,8 +221,7 @@ const History: React.FC = () => {
             </CardContent>
           </Card>
         </Grid>
-        {/* @ts-expect-error MUI Grid item prop */}
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card>
             <CardContent>
               <Typography variant="h4" fontWeight="bold" color="info.main">
@@ -236,8 +233,7 @@ const History: React.FC = () => {
             </CardContent>
           </Card>
         </Grid>
-        {/* @ts-expect-error MUI Grid item prop */}
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card>
             <CardContent>
               <Typography variant="h4" fontWeight="bold" color="error.main">
@@ -258,8 +254,7 @@ const History: React.FC = () => {
           <Typography variant="h6">Filtres</Typography>
         </Box>
         <Grid container spacing={2}>
-          {/* @ts-expect-error MUI Grid item prop */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <TextField
               fullWidth
               size="small"
@@ -276,8 +271,7 @@ const History: React.FC = () => {
               }}
             />
           </Grid>
-          {/* @ts-expect-error MUI Grid item prop */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <FormControl fullWidth size="small">
               <InputLabel>Type d'action</InputLabel>
               <Select
@@ -293,8 +287,7 @@ const History: React.FC = () => {
               </Select>
             </FormControl>
           </Grid>
-          {/* @ts-expect-error MUI Grid item prop */}
-          <Grid item xs={12} md={3}>
+          <Grid size={{ xs: 12, md: 3 }}>
             <FormControl fullWidth size="small">
               <InputLabel>Période</InputLabel>
               <Select
@@ -310,8 +303,7 @@ const History: React.FC = () => {
               </Select>
             </FormControl>
           </Grid>
-          {/* @ts-expect-error MUI Grid item prop */}
-          <Grid item xs={12} md={1}>
+          <Grid size={{ xs: 12, md: 1 }}>
             <Button
               fullWidth
               variant="outlined"
@@ -375,24 +367,33 @@ const History: React.FC = () => {
                     </Box>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2">{entry.description}</Typography>
+                    <Typography variant="body2">{entry.description || '-'}</Typography>
                   </TableCell>
                   {isAdmin && (
                     <TableCell>
-                      {entry.details && (
+                      {entry.details && Object.keys(entry.details).length > 0 ? (
                         <Tooltip
                           title={
-                            <Box>
+                            <Box sx={{ p: 0.5 }}>
                               {Object.entries(entry.details).map(([key, value]) => (
-                                <Typography key={key} variant="caption" display="block">
-                                  <strong>{key}:</strong> {value as string}
+                                <Typography key={key} variant="caption" display="block" sx={{ mb: 0.5 }}>
+                                  <strong>{key}:</strong> {String(value)}
                                 </Typography>
                               ))}
                             </Box>
                           }
+                          arrow
                         >
-                          <Chip label="Voir détails" size="small" variant="outlined" />
+                          <Chip 
+                            label={`${Object.keys(entry.details).length} détail(s)`}
+                            size="small" 
+                            variant="outlined" 
+                            color="info"
+                            sx={{ cursor: 'pointer' }}
+                          />
                         </Tooltip>
+                      ) : (
+                        <Typography variant="body2" color="text.secondary">-</Typography>
                       )}
                     </TableCell>
                   )}

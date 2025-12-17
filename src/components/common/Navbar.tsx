@@ -22,6 +22,7 @@ import {
   Settings as SettingsIcon,
   History as HistoryIcon,
   Refresh as RefreshIcon,
+  Home as HomeIcon,
 } from '@mui/icons-material';
 
 const drawerWidth = 240;
@@ -63,7 +64,12 @@ const Navbar: React.FC<NavbarProps> = ({
 
   const handleSettings = (): void => {
     handleMenuClose();
-    navigate('/settings');
+    navigate('/admin/settings');
+  };
+
+  const handleHome = (): void => {
+    handleMenuClose();
+    navigate('/');
   };
 
   // Couleur de l'avatar basée sur le rôle (utilise isAdmin/isResponsable du hook)
@@ -193,6 +199,13 @@ const Navbar: React.FC<NavbarProps> = ({
           </Box>
           <Divider />
           
+          <MenuItem onClick={handleHome}>
+            <ListItemIcon>
+              <HomeIcon fontSize="small" />
+            </ListItemIcon>
+            Accueil
+          </MenuItem>
+          
           <MenuItem onClick={handleProfile}>
             <ListItemIcon>
               <PersonIcon fontSize="small" />
@@ -200,12 +213,14 @@ const Navbar: React.FC<NavbarProps> = ({
             Mon Profil
           </MenuItem>
           
-          <MenuItem onClick={handleSettings}>
-            <ListItemIcon>
-              <SettingsIcon fontSize="small" />
-            </ListItemIcon>
-            Paramètres
-          </MenuItem>
+          {isAdmin && (
+            <MenuItem onClick={handleSettings}>
+              <ListItemIcon>
+                <SettingsIcon fontSize="small" />
+              </ListItemIcon>
+              Paramètres
+            </MenuItem>
+          )}
           
           <Divider />
           

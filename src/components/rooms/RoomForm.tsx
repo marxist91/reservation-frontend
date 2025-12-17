@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import type { Room, User } from '@/types';
+import type { Room } from '@/types';
 import {
   Dialog,
   DialogTitle,
@@ -54,7 +54,6 @@ interface RoomFormData {
   batiment: string;
   etage: string;
   superficie: string;
-  responsable_id: string;
   statut: string;
 }
 
@@ -64,7 +63,6 @@ interface RoomFormProps {
   onSubmit: (data: any) => void;
   room?: Room | null;
   isLoading?: boolean;
-  responsables?: User[];
 }
 
 const RoomForm: React.FC<RoomFormProps> = ({ 
@@ -73,7 +71,6 @@ const RoomForm: React.FC<RoomFormProps> = ({
   onSubmit, 
   room = null, 
   isLoading = false,
-  responsables = [],
 }) => {
   // Calculer les valeurs initiales basées sur room
   const initialData = useMemo((): RoomFormData => ({
@@ -84,7 +81,7 @@ const RoomForm: React.FC<RoomFormProps> = ({
     batiment: room?.batiment || '',
     etage: room?.etage || '',
     superficie: room?.superficie?.toString() || '',
-    responsable_id: room?.responsable_id?.toString() || '',
+    // responsable association removed — managed globally
     statut: room?.statut || 'disponible',
   }), [room]);
 
@@ -100,7 +97,6 @@ const RoomForm: React.FC<RoomFormProps> = ({
       batiment: room?.batiment || '',
       etage: room?.etage || '',
       superficie: room?.superficie?.toString() || '',
-      responsable_id: room?.responsable_id?.toString() || '',
       statut: room?.statut || 'disponible',
     });
   };
@@ -219,23 +215,6 @@ const RoomForm: React.FC<RoomFormProps> = ({
             />
 
             <Box display="flex" gap={2}>
-              {responsables.length > 0 && (
-                <TextField
-                  fullWidth
-                  select
-                  label="Responsable"
-                  value={formData.responsable_id}
-                  onChange={handleChange('responsable_id')}
-                >
-                  <MenuItem value="">Aucun</MenuItem>
-                  {responsables.map((resp) => (
-                    <MenuItem key={resp.id} value={resp.id}>
-                      {resp.prenom} {resp.nom}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              )}
-
               <TextField
                 fullWidth
                 select

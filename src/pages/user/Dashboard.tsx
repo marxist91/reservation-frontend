@@ -176,8 +176,7 @@ const Dashboard: React.FC = () => {
 
       <Grid container spacing={3}>
         {/* Réservations récentes */}
-        {/* @ts-expect-error MUI Grid item prop typing issue with exactOptionalPropertyTypes */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Paper sx={{ p: 3 }}>
             <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
               <Typography variant="h6">Mes Réservations Récentes</Typography>
@@ -227,8 +226,7 @@ const Dashboard: React.FC = () => {
         </Grid>
 
         {/* Salles disponibles */}
-        {/* @ts-expect-error MUI Grid item prop typing issue with exactOptionalPropertyTypes */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Paper sx={{ p: 3 }}>
             <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
               <Typography variant="h6">Salles Disponibles</Typography>

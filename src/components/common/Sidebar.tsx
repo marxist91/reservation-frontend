@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactElement } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import {
@@ -16,6 +16,8 @@ import {
   Chip,
   Avatar,
 } from '@mui/material';
+import { useQuery } from '@tanstack/react-query';
+import { departmentsAPI } from '@/api/departments';
 import {
   Dashboard as DashboardIcon,
   MeetingRoom as RoomIcon,
@@ -28,17 +30,25 @@ import {
   CalendarMonth as CalendarIcon,
   Search as SearchIcon,
   Assessment as StatsIcon,
+  Apartment as DepartmentsIcon,
   History as HistoryIcon,
   Notifications as NotificationsIcon,
+  Settings as SettingsIcon,
 } from '@mui/icons-material';
 
 const drawerWidth = 240;
 
 interface MenuItem {
   text: string;
-  icon: React.ReactElement;
+  icon: ReactElement;
   path: string;
   badge?: number;
+}
+
+interface SidebarProps {
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
+  width?: number;
 }
 
 // Menu items pour utilisateurs standards
@@ -83,7 +93,7 @@ const userMenuItems: MenuItem[] = [
 // Menu items pour administrateurs
 const adminMenuItems: MenuItem[] = [
   { 
-    text: 'Dashboard Admin', 
+    text: 'Dashboard', 
     icon: <AdminIcon />, 
     path: '/admin',
   },
@@ -113,28 +123,41 @@ const adminMenuItems: MenuItem[] = [
     path: '/admin/rooms',
   },
   { 
+    text: 'Départements',
+    icon: <DepartmentsIcon />,
+    path: '/admin/departments',
+  },
+  { 
     text: 'Statistiques', 
     icon: <StatsIcon />, 
     path: '/admin/statistics',
   },
+  { 
+    text: 'Paramètres',
+    icon: <SettingsIcon />,
+    path: '/admin/settings',
+  },
 ];
 
-interface SidebarProps {
-  mobileOpen: boolean;
-  onMobileClose: () => void;
-  width?: number;
-}
-
-const Sidebar: React.FC<SidebarProps> = ({ 
-  mobileOpen, 
+// Composant Sidebar
+const Sidebar: React.FC<SidebarProps> = ({
+  mobileOpen,
   onMobileClose,
   width = drawerWidth,
 }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { isAdmin, isResponsable, fullName, roleLabel, initials } = useAuth();
-  
   const [adminOpen, setAdminOpen] = useState(true);
+
+  // Récupérer le nombre de départements pour afficher un badge
+  const { data: departments = [], isLoading: depsLoading } = useQuery({
+    queryKey: ['departments'],
+    queryFn: async () => departmentsAPI.getAll(),
+    enabled: Boolean(isAdmin || isResponsable),
+  });
+
+  const departmentsCount = Array.isArray(departments) ? departments.length : 0;
 
   const handleNavigation = (path: string): void => {
     navigate(path);
@@ -151,9 +174,9 @@ const Sidebar: React.FC<SidebarProps> = ({
   };
 
   const drawerContent = (
-    <Box sx={{ 
-      height: '100%', 
-      display: 'flex', 
+    <Box sx={{
+      height: '100%',
+      display: 'flex',
       flexDirection: 'column',
       background: 'linear-gradient(180deg, #1976d2 0%, #1565c0 100%)',
       color: '#ffffff',
@@ -165,10 +188,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             component="img"
             src="/images/logo.png"
             alt="Port Autonome de Lomé"
-            sx={{
-              height: 30,
-              width: 'auto',
-            }}
+            sx={{ height: 30, width: 'auto' }}
           />
           <Box>
             <Typography variant="body2" fontWeight="700" noWrap sx={{ color: '#ffffff', fontSize: '0.85rem' }}>
@@ -180,14 +200,14 @@ const Sidebar: React.FC<SidebarProps> = ({
           </Box>
         </Box>
       </Toolbar>
-      
+
       <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
 
       {/* Menu principal */}
       <List sx={{ flexGrow: 1, px: 1.5, py: 2 }}>
         {userMenuItems.map((item) => (
           <ListItem key={item.text} disablePadding sx={{ mb: 0.5 }}>
-            <ListItemButton 
+            <ListItemButton
               onClick={() => handleNavigation(item.path)}
               selected={isActive(item.path)}
               sx={{
@@ -209,20 +229,10 @@ const Sidebar: React.FC<SidebarProps> = ({
                 },
               }}
             >
-              <ListItemIcon sx={{ minWidth: 40, color: 'inherit' }}>
-                {item.icon}
-              </ListItemIcon>
-              <ListItemText 
-                primary={item.text}
-                primaryTypographyProps={{ fontSize: '0.875rem' }}
-              />
+              <ListItemIcon sx={{ minWidth: 40, color: 'inherit' }}>{item.icon}</ListItemIcon>
+              <ListItemText primary={item.text} primaryTypographyProps={{ fontSize: '0.875rem' }} />
               {item.badge && (
-                <Chip 
-                  label={item.badge} 
-                  size="small" 
-                  color="error" 
-                  sx={{ height: 20, fontSize: '0.7rem' }}
-                />
+                <Chip label={item.badge} size="small" color="error" sx={{ height: 20, fontSize: '0.7rem' }} />
               )}
             </ListItemButton>
           </ListItem>
@@ -236,28 +246,16 @@ const Sidebar: React.FC<SidebarProps> = ({
           <List sx={{ px: 1.5 }}>
             {/* Header Admin */}
             <ListItem disablePadding>
-              <ListItemButton 
+              <ListItemButton
                 onClick={() => setAdminOpen(!adminOpen)}
-                sx={{ 
-                  borderRadius: 2,
-                  color: 'rgba(255,255,255,0.9)',
-                  '&:hover': {
-                    bgcolor: 'rgba(255,255,255,0.05)',
-                  }
-                }}
+                sx={{ borderRadius: 2, color: 'rgba(255,255,255,0.9)', '&:hover': { bgcolor: 'rgba(255,255,255,0.05)' } }}
               >
                 <ListItemIcon sx={{ minWidth: 40, color: '#f9a825' }}>
                   <AdminIcon />
                 </ListItemIcon>
-                <ListItemText 
+                <ListItemText
                   primary="Administration"
-                  primaryTypographyProps={{ 
-                    fontSize: '0.75rem', 
-                    fontWeight: 'bold',
-                    color: 'rgba(255,255,255,0.7)',
-                    textTransform: 'uppercase',
-                    letterSpacing: 0.5
-                  }}
+                  primaryTypographyProps={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: 0.5 }}
                 />
                 {adminOpen ? <ExpandLess sx={{ color: 'rgba(255,255,255,0.7)' }} /> : <ExpandMore sx={{ color: 'rgba(255,255,255,0.7)' }} />}
               </ListItemButton>
@@ -266,37 +264,26 @@ const Sidebar: React.FC<SidebarProps> = ({
             {/* Sous-menu Admin */}
             <Collapse in={adminOpen} timeout="auto" unmountOnExit>
               <List disablePadding>
-                {adminMenuItems.map((item) => (
-                  <ListItem key={item.text} disablePadding sx={{ mb: 0.5 }}>
-                    <ListItemButton 
-                      onClick={() => handleNavigation(item.path)}
-                      selected={isActive(item.path)}
-                      sx={{
-                        pl: 3,
-                        borderRadius: 2,
-                        color: 'rgba(255,255,255,0.8)',
-                        '&.Mui-selected': {
-                          bgcolor: 'rgba(249, 168, 37, 0.25)',
-                          color: '#ffffff',
-                          '& .MuiListItemIcon-root': {
-                            color: '#f9a825',
-                          },
-                        },
-                        '&:hover': {
-                          bgcolor: 'rgba(255,255,255,0.08)',
-                        },
-                      }}
-                    >
-                      <ListItemIcon sx={{ minWidth: 36, color: 'rgba(255,255,255,0.7)' }}>
-                        {item.icon}
-                      </ListItemIcon>
-                      <ListItemText 
-                        primary={item.text}
-                        primaryTypographyProps={{ fontSize: '0.8rem' }}
-                      />
-                    </ListItemButton>
-                  </ListItem>
-                ))}
+                {(() => {
+                  let itemsToRender: MenuItem[] = [];
+                  if (isAdmin) {
+                    itemsToRender = adminMenuItems;
+                  } else if (isResponsable) {
+                    const excluded = ['/admin/users', '/admin/rooms', '/admin/departments'];
+                    itemsToRender = adminMenuItems.filter(i => !excluded.includes(i.path));
+                  }
+                  return itemsToRender.map((item) => (
+                    <ListItem key={item.text} disablePadding sx={{ mb: 0.5 }}>
+                      <ListItemButton onClick={() => handleNavigation(item.path)} selected={isActive(item.path)} sx={{ pl: 3, borderRadius: 2, color: 'rgba(255,255,255,0.8)', '&.Mui-selected': { bgcolor: 'rgba(249, 168, 37, 0.25)', color: '#ffffff', '& .MuiListItemIcon-root': { color: '#f9a825' } }, '&:hover': { bgcolor: 'rgba(255,255,255,0.08)' } }}>
+                        <ListItemIcon sx={{ minWidth: 36, color: 'rgba(255,255,255,0.7)' }}>{item.icon}</ListItemIcon>
+                        <ListItemText primary={item.text} primaryTypographyProps={{ fontSize: '0.8rem' }} />
+                        {item.path === '/admin/departments' && (
+                          <Chip label={depsLoading ? '…' : departmentsCount} size="small" color="secondary" sx={{ ml: 1, height: 22, fontSize: '0.7rem' }} />
+                        )}
+                      </ListItemButton>
+                    </ListItem>
+                  ));
+                })()}
               </List>
             </Collapse>
           </List>
@@ -306,38 +293,11 @@ const Sidebar: React.FC<SidebarProps> = ({
       {/* Footer avec info utilisateur */}
       <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
       <Box sx={{ p: 2 }}>
-        <Box 
-          display="flex" 
-          alignItems="center" 
-          gap={1.5}
-          sx={{
-            p: 1.5,
-            bgcolor: 'rgba(255,255,255,0.1)',
-            borderRadius: 2,
-            backdropFilter: 'blur(10px)',
-          }}
-        >
-          <Avatar 
-            sx={{ 
-              width: 36, 
-              height: 36, 
-              bgcolor: '#f9a825',
-              color: '#000000',
-              fontSize: '0.875rem',
-              fontWeight: 700,
-              border: '2px solid #fbc02d',
-              boxShadow: '0 2px 8px rgba(249, 168, 37, 0.4)',
-            }}
-          >
-            {initials}
-          </Avatar>
+        <Box display="flex" alignItems="center" gap={1.5} sx={{ p: 1.5, bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 2, backdropFilter: 'blur(10px)' }}>
+          <Avatar sx={{ width: 36, height: 36, bgcolor: '#f9a825', color: '#000000', fontSize: '0.875rem', fontWeight: 700, border: '2px solid #fbc02d', boxShadow: '0 2px 8px rgba(249, 168, 37, 0.4)' }}>{initials}</Avatar>
           <Box sx={{ overflow: 'hidden' }}>
-            <Typography variant="body2" fontWeight="600" noWrap sx={{ color: '#ffffff' }}>
-              {fullName}
-            </Typography>
-            <Typography variant="caption" noWrap sx={{ color: 'rgba(255,255,255,0.7)' }}>
-              {roleLabel}
-            </Typography>
+            <Typography variant="body2" fontWeight="600" noWrap sx={{ color: '#ffffff' }}>{fullName}</Typography>
+            <Typography variant="caption" noWrap sx={{ color: 'rgba(255,255,255,0.7)' }}>{roleLabel}</Typography>
           </Box>
         </Box>
       </Box>
@@ -345,23 +305,22 @@ const Sidebar: React.FC<SidebarProps> = ({
   );
 
   return (
-    <Box
-      component="nav"
-      sx={{ width: { md: width }, flexShrink: { md: 0 } }}
-    >
+    <Box component="nav" sx={{ width: { md: width }, flexShrink: { md: 0 } }}>
       {/* Mobile drawer */}
       <Drawer
         variant="temporary"
-        open={mobileOpen}
+        open={Boolean(mobileOpen)}
         onClose={onMobileClose}
         ModalProps={{ keepMounted: true }}
         sx={{
           display: { xs: 'block', md: 'none' },
-          '& .MuiDrawer-paper': { 
-            boxSizing: 'border-box', 
+          '& .MuiDrawer-paper': {
+            boxSizing: 'border-box',
             width: width,
             borderRight: 'none',
             boxShadow: 3,
+            background: 'linear-gradient(180deg, #1976d2 0%, #1565c0 100%)',
+            color: '#ffffff',
           },
         }}
       >
@@ -373,11 +332,13 @@ const Sidebar: React.FC<SidebarProps> = ({
         variant="permanent"
         sx={{
           display: { xs: 'none', md: 'block' },
-          '& .MuiDrawer-paper': { 
-            boxSizing: 'border-box', 
+          '& .MuiDrawer-paper': {
+            boxSizing: 'border-box',
             width: width,
             borderRight: '1px solid',
             borderColor: 'divider',
+            background: 'linear-gradient(180deg, #1976d2 0%, #1565c0 100%)',
+            color: '#ffffff',
           },
         }}
         open

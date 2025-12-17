@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useHistoryStore } from '@/store/historyStore';
 import { useAuthStore } from '../../store/authStore';
 import { format } from 'date-fns';
@@ -22,6 +22,7 @@ import {
   Grid,
   Avatar,
   TablePagination,
+  Tooltip,
 } from '@mui/material';
 import {
   Download as DownloadIcon,
@@ -43,6 +44,8 @@ const AdminHistory: React.FC = () => {
     getFilteredHistory,
     getStats,
   } = useHistoryStore();
+
+  const fetchHistory = useHistoryStore((state) => state.fetchHistory);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(0);
@@ -75,6 +78,15 @@ const AdminHistory: React.FC = () => {
     page * rowsPerPage,
     page * rowsPerPage + rowsPerPage
   );
+
+  useEffect(() => {
+    // Ensure we fetch the latest history when opening the page or when user changes
+    try {
+      fetchHistory();
+    } catch (e) {
+      // silent
+    }
+  }, [fetchHistory, currentUser?.id]);
 
   const getActionColor = (type: string | undefined): ActionColor => {
     switch (type) {
@@ -159,8 +171,7 @@ const AdminHistory: React.FC = () => {
       </Box>
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
-        {/* @ts-expect-error MUI Grid item prop */}
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card>
             <CardContent>
               <Box display="flex" alignItems="center" gap={2}>
@@ -177,8 +188,7 @@ const AdminHistory: React.FC = () => {
             </CardContent>
           </Card>
         </Grid>
-        {/* @ts-expect-error MUI Grid item prop */}
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card>
             <CardContent>
               <Box display="flex" alignItems="center" gap={2}>
@@ -193,8 +203,7 @@ const AdminHistory: React.FC = () => {
             </CardContent>
           </Card>
         </Grid>
-        {/* @ts-expect-error MUI Grid item prop */}
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card>
             <CardContent>
               <Box display="flex" alignItems="center" gap={2}>
@@ -209,8 +218,7 @@ const AdminHistory: React.FC = () => {
             </CardContent>
           </Card>
         </Grid>
-        {/* @ts-expect-error MUI Grid item prop */}
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card>
             <CardContent>
               <Box display="flex" alignItems="center" gap={2}>
@@ -229,8 +237,7 @@ const AdminHistory: React.FC = () => {
 
       <Paper sx={{ p: 2, mb: 2 }}>
         <Grid container spacing={2}>
-          {/* @ts-expect-error MUI Grid item prop */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <TextField
               fullWidth
               size="small"
@@ -240,8 +247,7 @@ const AdminHistory: React.FC = () => {
               placeholder="Nom, action, description..."
             />
           </Grid>
-          {/* @ts-expect-error MUI Grid item prop */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <TextField
               fullWidth
               size="small"
@@ -264,8 +270,7 @@ const AdminHistory: React.FC = () => {
               <MenuItem value="room_updated">Modification salle</MenuItem>
             </TextField>
           </Grid>
-          {/* @ts-expect-error MUI Grid item prop */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <TextField
               fullWidth
               size="small"
@@ -355,10 +360,29 @@ const AdminHistory: React.FC = () => {
                     </TableCell>
                     {isAdmin && (
                       <TableCell>
-                        {entry.details && (
-                          <Typography variant="caption" color="text.secondary">
-                            {JSON.stringify(entry.details, null, 2).substring(0, 100)}...
-                          </Typography>
+                        {entry.details && typeof entry.details === 'object' && Object.keys(entry.details).length > 0 ? (
+                          <Tooltip
+                            title={
+                              <Box sx={{ p: 0.5 }}>
+                                {Object.entries(entry.details).map(([key, value]) => (
+                                  <Typography key={key} variant="caption" display="block" sx={{ mb: 0.5 }}>
+                                    <strong>{key}:</strong> {String(value)}
+                                  </Typography>
+                                ))}
+                              </Box>
+                            }
+                            arrow
+                          >
+                            <Chip 
+                              label={`${Object.keys(entry.details).length} détail(s)`}
+                              size="small" 
+                              variant="outlined" 
+                              color="info"
+                              sx={{ cursor: 'pointer' }}
+                            />
+                          </Tooltip>
+                        ) : (
+                          <Typography variant="body2" color="text.secondary">-</Typography>
                         )}
                       </TableCell>
                     )}

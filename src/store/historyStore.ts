@@ -88,7 +88,6 @@ export const useHistoryStore = create<HistoryState>()(
         set({ isLoading: true, error: null });
         try {
           const data = await historyApi.getAll();
-          console.log('📜 Historique brut du backend:', data);
           
           // Vérifier si c'est une erreur d'API
           if (!Array.isArray(data)) {
@@ -99,6 +98,7 @@ export const useHistoryStore = create<HistoryState>()(
           
           // Mapper les données backend vers le format frontend
           const mappedHistory: ExtendedHistory[] = data.map((h): ExtendedHistory => {
+            
             let type: HistoryType = 'info';
             const backendType = h.type?.toUpperCase();
             const action = h.action?.toLowerCase() || '';
@@ -118,20 +118,36 @@ export const useHistoryStore = create<HistoryState>()(
             else if (backendType === 'SUPPRESSION') type = 'reservation_deleted';
             else type = (h.type?.toLowerCase() as HistoryType) || 'info';
 
-            return {
+            // Parser les détails si c'est une string JSON
+            let parsedDetails = {};
+            if (h.details) {
+              if (typeof h.details === 'string') {
+                try {
+                  parsedDetails = JSON.parse(h.details);
+                } catch (e) {
+                  console.warn('Impossible de parser details:', h.details);
+                  parsedDetails = {};
+                }
+              } else if (typeof h.details === 'object') {
+                parsedDetails = h.details;
+              }
+            }
+
+            const mapped = {
               id: h.id,
               timestamp: h.created_at || new Date().toISOString(),
               type: type,
               action: h.action || '',
-              description: (h.metadata?.['description'] as string) || '',
+              description: h.description || '',
               userId: h.user_id || null,
               userName: h.utilisateur ? h.utilisateur.nom : 'Système',
-              details: h.metadata || {},
-              reservationId: h.entity_id,
+              details: parsedDetails,
+              reservationId: h.reservation_id || h.entity_id,
             };
+            
+            return mapped;
           });
           
-          console.log('📜 Historique mappé:', mappedHistory);
           set({ history: mappedHistory, isLoading: false });
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Erreur inconnue';

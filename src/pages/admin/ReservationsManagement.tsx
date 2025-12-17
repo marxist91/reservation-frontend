@@ -45,6 +45,8 @@ import {
 import { reservationsAPI } from '@/api/reservations';
 import { roomsAPI } from '@/api/rooms';
 import { usersAPI } from '@/api/users';
+import { alternativesAPI } from '@/api/alternatives';
+import apiClient from '@/api/client';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import toast from 'react-hot-toast';
@@ -64,6 +66,12 @@ const ReservationsManagement: React.FC = () => {
   const [openViewDialog, setOpenViewDialog] = useState(false);
   const [openRejectDialog, setOpenRejectDialog] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [proposeAlternative, setProposeAlternative] = useState(false);
+  const [alternativeRoomId, setAlternativeRoomId] = useState<number | ''>('');
+  const [alternativeDate, setAlternativeDate] = useState('');
+  const [alternativeStartTime, setAlternativeStartTime] = useState('');
+  const [alternativeEndTime, setAlternativeEndTime] = useState('');
+  const [alternativeMotif, setAlternativeMotif] = useState('');
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [tabValue, setTabValue] = useState(0);
@@ -90,7 +98,7 @@ const ReservationsManagement: React.FC = () => {
   });
 
   // Récupérer les salles pour le filtre
-  const { data: roomsData } = useQuery<Room[]>({
+  const { data: roomsData, isLoading: roomsLoading } = useQuery<Room[]>({
     queryKey: ['rooms'],
     queryFn: roomsAPI.getAll,
   });
@@ -100,6 +108,32 @@ const ReservationsManagement: React.FC = () => {
     queryKey: ['users'],
     queryFn: usersAPI.getAll,
     select: (data) => Array.isArray(data) ? data : (data.utilisateurs || []),
+  });
+
+  // Récupérer les départements (fallback si la réservation ne contient pas l'objet department)
+  const { data: departments = [] } = useQuery<any>({
+    queryKey: ['departments'],
+    queryFn: async () => {
+      try {
+        const res = await apiClient.get('/departments');
+        return res.data?.data ?? res.data ?? [];
+      } catch (e) {
+        return [];
+      }
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Récupérer les salles disponibles pour la proposition alternative
+  const { data: availableRooms = [], isLoading: availableRoomsLoading } = useQuery<Room[]>({
+    queryKey: ['availableRooms', alternativeDate, alternativeStartTime, alternativeEndTime, selectedReservation?.id],
+    queryFn: () => alternativesAPI.getAvailableRooms({
+      date: alternativeDate,
+      startTime: alternativeStartTime,
+      endTime: alternativeEndTime,
+      ...(selectedReservation?.id && { excludeReservationId: selectedReservation.id }),
+    }),
+    enabled: proposeAlternative && !!alternativeDate && !!alternativeStartTime && !!alternativeEndTime,
   });
 
   const reservations: Reservation[] = Array.isArray(reservationsData?.data) ? reservationsData.data : (Array.isArray(reservationsData) ? reservationsData : []);
@@ -151,7 +185,20 @@ const ReservationsManagement: React.FC = () => {
 
   // Mutation pour refuser une réservation
   const rejectMutation = useMutation({
-    mutationFn: ({ id, rejection_reason }: { id: number; rejection_reason: string }) => reservationsAPI.reject(id, rejection_reason),
+    mutationFn: ({ 
+      id, 
+      rejection_reason, 
+      proposed_alternative 
+    }: { 
+      id: number; 
+      rejection_reason: string;
+      proposed_alternative?: {
+        proposed_room_id: number;
+        proposed_date_debut: string;
+        proposed_date_fin: string;
+        motif?: string;
+      };
+    }) => reservationsAPI.reject(id, rejection_reason, proposed_alternative),
     onSuccess: (_data, { id: reservationId }) => {
       const reservationsData = queryClient.getQueryData<any>(['reservations', 'admin']);
       const reservations: Reservation[] = Array.isArray(reservationsData?.data) ? reservationsData.data : [];
@@ -216,6 +263,12 @@ const ReservationsManagement: React.FC = () => {
   const handleReject = (reservation: Reservation): void => {
     setSelectedReservation(reservation);
     setRejectionReason('');
+    setProposeAlternative(false);
+    setAlternativeRoomId('');
+    setAlternativeDate(reservation.date || '');
+    setAlternativeStartTime(reservation.heure_debut || '');
+    setAlternativeEndTime(reservation.heure_fin || '');
+    setAlternativeMotif('');
     setOpenRejectDialog(true);
   };
 
@@ -224,13 +277,38 @@ const ReservationsManagement: React.FC = () => {
       toast.error('Le motif du refus est obligatoire');
       return;
     }
+
+    // Validation si alternative proposée
+    if (proposeAlternative) {
+      if (!alternativeRoomId || !alternativeDate || !alternativeStartTime || !alternativeEndTime) {
+        toast.error('Tous les champs de l\'alternative sont obligatoires');
+        return;
+      }
+    }
+
     if (selectedReservation) {
-      rejectMutation.mutate({
+      const payload: any = {
         id: selectedReservation.id,
         rejection_reason: rejectionReason
-      });
+      };
+
+      // Ajouter l'alternative si proposée
+      if (proposeAlternative && alternativeRoomId) {
+        const dateDebut = `${alternativeDate} ${alternativeStartTime}`;
+        const dateFin = `${alternativeDate} ${alternativeEndTime}`;
+        
+        payload.proposed_alternative = {
+          proposed_room_id: Number(alternativeRoomId),
+          proposed_date_debut: dateDebut,
+          proposed_date_fin: dateFin,
+          motif: alternativeMotif || undefined
+        };
+      }
+
+      rejectMutation.mutate(payload);
       setOpenRejectDialog(false);
       setRejectionReason('');
+      setProposeAlternative(false);
       setSelectedReservation(null);
     }
   };
@@ -241,8 +319,26 @@ const ReservationsManagement: React.FC = () => {
     }
   };
 
-  const handleView = (reservation: Reservation): void => {
-    setSelectedReservation(reservation);
+  const handleView = async (reservation: Reservation): Promise<void> => {
+    // Récupérer la version enrichie de la réservation depuis l'API
+    try {
+      const all = await reservationsAPI.getAll();
+      const list: Reservation[] = Array.isArray(all.data) ? all.data : [];
+      const found = list.find((r) => r.id === reservation.id) as Reservation | undefined;
+      const used = found ?? reservation;
+      // Garantir que createdAt existe (fallbacks depuis autres clés éventuelles)
+      try {
+        const anyUsed: any = used;
+        anyUsed.createdAt = anyUsed.createdAt ?? anyUsed.created_at ?? anyUsed.created ?? anyUsed.updatedAt ?? anyUsed.date_created ?? null;
+      } catch (e) {
+        // noop
+      }
+      console.log('🔍 OPEN RESERVATION DETAIL (fetched)', used);
+      setSelectedReservation(used);
+    } catch (e) {
+      console.warn('⚠️ Impossible de fetch reservation par id, utilisation de l objet local', e);
+      setSelectedReservation(reservation);
+    }
     setOpenViewDialog(true);
   };
 
@@ -330,7 +426,31 @@ const ReservationsManagement: React.FC = () => {
       }
       return true;
     })
-    .sort((a, b) => new Date((b as any).createdAt).getTime() - new Date((a as any).createdAt).getTime());
+    .sort((a, b) => {
+      // Tri intelligent pour les réservations validées
+      const isValidatedA = a.statut === 'validee' || a.statut === 'confirmee';
+      const isValidatedB = b.statut === 'validee' || b.statut === 'confirmee';
+      
+      if (isValidatedA && isValidatedB) {
+        // Les deux sont validées, trier par date
+        const dateA = new Date(a.date || '');
+        const dateB = new Date(b.date || '');
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+        
+        const isPastA = dateA < now;
+        const isPastB = dateB < now;
+        
+        // Futures en haut (ordre croissant), passées en bas (ordre décroissant)
+        if (isPastA && !isPastB) return 1;  // B future avant A passée
+        if (!isPastA && isPastB) return -1; // A future avant B passée
+        if (!isPastA && !isPastB) return dateA.getTime() - dateB.getTime(); // Futures: plus proche en premier
+        return dateB.getTime() - dateA.getTime(); // Passées: plus récente en premier
+      }
+      
+      // Sinon tri par date de création (plus récentes en premier)
+      return new Date((b as any).createdAt).getTime() - new Date((a as any).createdAt).getTime();
+    });
 
   // Pagination
   const paginatedReservations = filteredReservations.slice(
@@ -472,6 +592,9 @@ const ReservationsManagement: React.FC = () => {
                       sx={{
                         ...(reservation.statut === 'rejetee' || reservation.statut === 'refusee' ? {
                           bgcolor: 'rgba(211, 47, 47, 0.05)'
+                        } : {}),
+                        ...(reservation.statut === 'annulee' ? {
+                          bgcolor: 'rgba(253, 216, 53, 0.12)'
                         } : {})
                       }}
                     >
@@ -625,6 +748,18 @@ const ReservationsManagement: React.FC = () => {
                   </Typography>
                 </Paper>
 
+                {(() => {
+                  const deptId = resAny.department_id ?? resAny.departmentId ?? resAny.utilisateur?.department_id ?? resAny.utilisateur?.departmentId ?? null;
+                  const deptName = resAny.department?.name || resAny.departement || resAny.utilisateur?.department?.name || resAny.utilisateur?.departement ||
+                    (departments && departments.length && deptId ? (departments.find((d: any) => d.id === deptId)?.name) : null);
+                  return (
+                    <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+                      <Typography variant="subtitle2" color="text.secondary">Département</Typography>
+                      <Typography variant="body1">{deptName || 'Non renseigné'}</Typography>
+                    </Paper>
+                  );
+                })()}
+
                 <Box display="flex" gap={2} mb={2}>
                   <Paper variant="outlined" sx={{ p: 2, flex: 1 }}>
                     <Typography variant="subtitle2" color="text.secondary">Date</Typography>
@@ -655,6 +790,11 @@ const ReservationsManagement: React.FC = () => {
                     sx={{ mt: 0.5 }}
                   />
                 </Paper>
+                {selectedReservation.statut === 'annulee' && (
+                  <Paper variant="outlined" sx={{ p: 2, mb: 2, bgcolor: 'rgba(255, 235, 59, 0.12)' }}>
+                    <Typography variant="body2" color="text.secondary">Cette réservation a été annulée</Typography>
+                  </Paper>
+                )}
 
                 {(selectedReservation.statut === 'refusee' || selectedReservation.statut === 'rejetee') && selectedReservation.rejection_reason && (
                   <Paper variant="outlined" sx={{ p: 2, mb: 2, bgcolor: '#ffebee' }}>
@@ -668,7 +808,27 @@ const ReservationsManagement: React.FC = () => {
                 <Paper variant="outlined" sx={{ p: 2 }}>
                   <Typography variant="subtitle2" color="text.secondary">Créée le</Typography>
                   <Typography variant="body1">
-                    {formatDateTime(resAny.createdAt)}
+                    {(() => {
+                      const r = resAny as any;
+                      const candidates = [
+                        r.createdAt,
+                        r.created_at,
+                        r.created,
+                        r.date_created,
+                        r.createdOn,
+                        r.created_on,
+                        r.timestamp,
+                        r.dateCreation,
+                        r.date_created_at
+                      ];
+                      const createdRaw = candidates.find((c) => c !== undefined && c !== null);
+                      if (createdRaw) return formatDateTime(createdRaw);
+                      // Fallback: utiliser la date + heure de la réservation si pas de createdAt
+                      const datePart = r.date || r.date_debut || selectedReservation.date;
+                      const timePart = r.heure_debut || selectedReservation.heure_debut || '';
+                      if (datePart) return `${datePart}${timePart ? ' ' + timePart : ''}`;
+                      return 'N/A';
+                    })()}
                   </Typography>
                 </Paper>
               </Box>
@@ -712,8 +872,9 @@ const ReservationsManagement: React.FC = () => {
         onClose={() => {
           setOpenRejectDialog(false);
           setRejectionReason('');
+          setProposeAlternative(false);
         }}
-        maxWidth="sm"
+        maxWidth="md"
         fullWidth
       >
         <DialogTitle>Refuser la réservation</DialogTitle>
@@ -749,11 +910,125 @@ const ReservationsManagement: React.FC = () => {
             error={rejectionReason.trim() === ''}
             helperText="Le motif du refus est obligatoire"
           />
+
+          {/* Section Proposition Alternative */}
+          <Box sx={{ mt: 3, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+            <FormControl fullWidth>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <input
+                  type="checkbox"
+                  checked={proposeAlternative}
+                  onChange={(e) => setProposeAlternative(e.target.checked)}
+                  style={{ marginRight: 8 }}
+                />
+                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                  Proposer une salle alternative
+                </Typography>
+              </Box>
+            </FormControl>
+
+            {proposeAlternative && (
+              <Box sx={{ mt: 2 }}>
+                <Grid container spacing={2}>
+                  <Grid size={12}>
+                    <FormControl fullWidth required>
+                      <InputLabel>Salle alternative</InputLabel>
+                      <Select
+                        value={alternativeRoomId}
+                        onChange={(e: SelectChangeEvent<number | ''>) => setAlternativeRoomId(e.target.value as number)}
+                        label="Salle alternative"
+                        disabled={roomsLoading || (!!alternativeDate && !!alternativeStartTime && !!alternativeEndTime && availableRoomsLoading)}
+                      >
+                        <MenuItem value="">
+                          {availableRoomsLoading ? '-- Vérification de la disponibilité... --' : 
+                           roomsLoading ? '-- Chargement des salles... --' : 
+                           '-- Sélectionner une salle --'}
+                        </MenuItem>
+                        {!roomsLoading && 
+                         (alternativeDate && alternativeStartTime && alternativeEndTime ? availableRooms : roomsData || []).length > 0 ? (
+                          (alternativeDate && alternativeStartTime && alternativeEndTime ? availableRooms : roomsData || [])
+                            .filter(r => r.id !== selectedReservation?.room_id)
+                            .map((room) => (
+                              <MenuItem key={room.id} value={room.id}>
+                                {room.nom} (Capacité: {room.capacite})
+                                {!room.disponible && ' [Inactive]'}
+                              </MenuItem>
+                            ))
+                        ) : (
+                          !roomsLoading && !availableRoomsLoading && (
+                            <MenuItem disabled value="">
+                              {alternativeDate && alternativeStartTime && alternativeEndTime ? 
+                                'Aucune salle disponible pour ce créneau' : 
+                                'Aucune salle trouvée'}
+                            </MenuItem>
+                          )
+                        )}
+                      </Select>
+                      {alternativeDate && alternativeStartTime && alternativeEndTime && !availableRoomsLoading && (
+                        <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, ml: 1 }}>
+                          {availableRooms.length} salle(s) disponible(s) pour ce créneau
+                        </Typography>
+                      )}
+                    </FormControl>
+                  </Grid>
+
+                  <Grid size={{ xs: 12, sm: 4 }}>
+                    <TextField
+                      fullWidth
+                      required
+                      type="date"
+                      label="Date alternative"
+                      value={alternativeDate}
+                      onChange={(e) => setAlternativeDate(e.target.value)}
+                      InputLabelProps={{ shrink: true }}
+                    />
+                  </Grid>
+
+                  <Grid size={{ xs: 12, sm: 4 }}>
+                    <TextField
+                      fullWidth
+                      required
+                      type="time"
+                      label="Heure début"
+                      value={alternativeStartTime}
+                      onChange={(e) => setAlternativeStartTime(e.target.value)}
+                      InputLabelProps={{ shrink: true }}
+                    />
+                  </Grid>
+
+                  <Grid size={{ xs: 12, sm: 4 }}>
+                    <TextField
+                      fullWidth
+                      required
+                      type="time"
+                      label="Heure fin"
+                      value={alternativeEndTime}
+                      onChange={(e) => setAlternativeEndTime(e.target.value)}
+                      InputLabelProps={{ shrink: true }}
+                    />
+                  </Grid>
+
+                  <Grid size={12}>
+                    <TextField
+                      fullWidth
+                      multiline
+                      rows={2}
+                      label="Motif de l'alternative (optionnel)"
+                      value={alternativeMotif}
+                      onChange={(e) => setAlternativeMotif(e.target.value)}
+                      placeholder="Ex: Salle avec plus d'espace, meilleur équipement..."
+                    />
+                  </Grid>
+                </Grid>
+              </Box>
+            )}
+          </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => {
             setOpenRejectDialog(false);
             setRejectionReason('');
+            setProposeAlternative(false);
           }}>
             Annuler
           </Button>
@@ -763,7 +1038,7 @@ const ReservationsManagement: React.FC = () => {
             onClick={confirmReject}
             disabled={rejectMutation.isPending || !rejectionReason.trim()}
           >
-            {rejectMutation.isPending ? 'Refus en cours...' : 'Confirmer le refus'}
+            {rejectMutation.isPending ? 'Refus en cours...' : proposeAlternative ? 'Refuser et Proposer' : 'Confirmer le refus'}
           </Button>
         </DialogActions>
       </Dialog>

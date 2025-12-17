@@ -56,8 +56,7 @@ const ReservationList: React.FC<ReservationListProps> = ({
   return (
     <Grid container spacing={3}>
       {reservations.map((reservation) => (
-        /* @ts-expect-error MUI Grid item prop typing issue */
-        <Grid item xs={12} sm={6} md={4} key={reservation.id}>
+        <Grid size={{ xs: 12, sm: 6, md: 4 }} key={reservation.id}>
           <ReservationCard
             reservation={reservation}
             onCancel={onCancel}

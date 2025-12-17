@@ -14,7 +14,6 @@ import {
   Chip,
   Button,
   Divider,
-  Avatar,
   List,
   ListItem,
   ListItemIcon,
@@ -135,13 +134,11 @@ const RoomDetails: React.FC = () => {
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Skeleton variant="rectangular" height={400} sx={{ borderRadius: 3, mb: 3 }} />
         <Grid container spacing={3}>
-          {/* @ts-expect-error MUI Grid item prop */}
-          <Grid item xs={12} md={8}>
+          <Grid size={{ xs: 12, md: 8 }}>
             <Skeleton variant="text" height={60} />
             <Skeleton variant="text" height={100} />
           </Grid>
-          {/* @ts-expect-error MUI Grid item prop */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <Skeleton variant="rectangular" height={200} sx={{ borderRadius: 2 }} />
           </Grid>
         </Grid>
@@ -286,8 +283,7 @@ const RoomDetails: React.FC = () => {
       <Container maxWidth="lg">
         <Grid container spacing={3}>
           {/* Colonne gauche - Détails */}
-          {/* @ts-expect-error MUI Grid item prop */}
-          <Grid item xs={12} md={8}>
+          <Grid size={{ xs: 12, md: 8 }}>
             {/* Description */}
             <Paper sx={{ p: 3, borderRadius: 2, mb: 3 }}>
               <Typography variant="h6" fontWeight={600} gutterBottom>
@@ -306,8 +302,7 @@ const RoomDetails: React.FC = () => {
               {equipements.length > 0 ? (
                 <Grid container spacing={2}>
                   {equipements.map((equip, index) => (
-                    /* @ts-expect-error MUI Grid item prop */
-                    <Grid item xs={6} sm={4} key={index}>
+                    <Grid size={{ xs: 6, sm: 4 }} key={index}>
                       <Box
                         sx={{
                           display: 'flex',
@@ -387,8 +382,7 @@ const RoomDetails: React.FC = () => {
           </Grid>
 
           {/* Colonne droite - Actions */}
-          {/* @ts-expect-error MUI Grid item prop */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             {/* Card de réservation */}
             <Paper
               sx={{
@@ -448,28 +442,9 @@ const RoomDetails: React.FC = () => {
 
               <Divider sx={{ my: 3 }} />
 
-              {/* Responsable */}
-              {room.responsable && (
-                <Box>
-                  <Typography variant="subtitle2" fontWeight={600} gutterBottom>
-                    Responsable de la salle
-                  </Typography>
-                  <Box display="flex" alignItems="center" gap={2} mt={1}>
-                    <Avatar sx={{ bgcolor: 'primary.main' }}>
-                      {room.responsable.prenom?.charAt(0)}
-                      {room.responsable.nom?.charAt(0)}
-                    </Avatar>
-                    <Box>
-                      <Typography variant="body2" fontWeight={500}>
-                        {room.responsable.prenom} {room.responsable.nom}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {room.responsable.email}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Box>
-              )}
+              {/* Les responsables ne sont plus attachés aux salles.
+                  Tous les utilisateurs avec le rôle "responsable" ont désormais
+                  un accès global pour gérer les demandes. */}
             </Paper>
           </Grid>
         </Grid>

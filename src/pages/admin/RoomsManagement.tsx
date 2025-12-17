@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import RoomCard from '@/components/rooms/RoomCard';
+import apiClient from '@/api/client';
+import { format } from 'date-fns';
 import RoomForm from '@/components/rooms/RoomForm';
 import toast from 'react-hot-toast';
 import { roomsAPI } from '@/api/rooms';
@@ -29,6 +31,7 @@ import {
   InputAdornment,
   Grid,
   TextField,
+  MenuItem,
 } from '@mui/material';
 import {
   Edit as EditIcon,
@@ -50,7 +53,6 @@ interface RoomFormData {
   batiment?: string | null;
   etage?: string | null;
   superficie?: number | null;
-  responsable_id?: number | null;
 }
 
 interface UpdateRoomParams {
@@ -81,6 +83,9 @@ const RoomsManagement: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(12);
+  const [selectedDate, setSelectedDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
+  const [selectedHour, setSelectedHour] = useState<string>(new Date().getHours().toString().padStart(2, '0') + ':00');
+  const [duration, setDuration] = useState<number>(60); // Durée en minutes (défaut 1h)
 
   // Récupérer toutes les salles
   const { data: rooms = [], isLoading, error } = useQuery<Room[]>({
@@ -163,7 +168,6 @@ const RoomsManagement: React.FC = () => {
       batiment: formData.batiment || null,
       etage: formData.etage || null,
       superficie: formData.superficie ? parseFloat(formData.superficie) : null,
-      responsable_id: formData.responsable_id || null,
     };
 
     if (selectedRoom) {
@@ -190,6 +194,35 @@ const RoomsManagement: React.FC = () => {
       .toLowerCase()
       .includes(searchTerm.toLowerCase())
   );
+
+  // Récupérer la disponibilité des salles via l'endpoint dédié
+  const { data: availabilityData, isLoading: availabilityLoading } = useQuery<any>({
+    queryKey: ['rooms-availability', selectedDate, selectedHour, duration],
+    queryFn: async () => {
+      try {
+        const response = await apiClient.get('/rooms/availability', {
+          params: { date: selectedDate, time: selectedHour, duration }
+        });
+        console.log('📅 Disponibilité des salles reçue:', response.data);
+        return response.data;
+      } catch (err) {
+        console.error('Erreur récupération disponibilité salles', err);
+        return { rooms: [], summary: { total: 0, available: 0, occupied: 0 } };
+      }
+    },
+    enabled: !!selectedDate && !!selectedHour,
+  });
+
+  const occupiedMap = useMemo(() => {
+    const map: Record<number, boolean> = {};
+    (availabilityData?.rooms || []).forEach((room: any) => {
+      if (room.occupied || room.partiallyOccupied) {
+        map[room.id] = true;
+      }
+    });
+    console.log('🗺️ Occupation map générée:', map);
+    return map;
+  }, [availabilityData]);
 
   // Pagination
   const handleChangePage = (_event: unknown, newPage: number): void => {
@@ -259,6 +292,49 @@ const RoomsManagement: React.FC = () => {
         />
       </Paper>
 
+      {/* Sélecteurs date / heure / durée pour vérifier disponibilité */}
+      <Box display="flex" gap={2} alignItems="center" mb={2} flexWrap="wrap">
+        <TextField
+          label="Date"
+          type="date"
+          value={selectedDate}
+          onChange={(e) => setSelectedDate(e.target.value)}
+          InputLabelProps={{ shrink: true }}
+          size="small"
+        />
+        <TextField
+          label="Heure de début"
+          type="time"
+          value={selectedHour}
+          onChange={(e) => setSelectedHour(e.target.value)}
+          inputProps={{ step: 900 }}
+          size="small"
+        />
+        <TextField
+          label="Durée"
+          select
+          value={duration}
+          onChange={(e) => setDuration(Number(e.target.value))}
+          size="small"
+          sx={{ minWidth: 120 }}
+        >
+          <MenuItem value={15}>15 min</MenuItem>
+          <MenuItem value={30}>30 min</MenuItem>
+          <MenuItem value={60}>1 heure</MenuItem>
+          <MenuItem value={90}>1h30</MenuItem>
+          <MenuItem value={120}>2 heures</MenuItem>
+          <MenuItem value={180}>3 heures</MenuItem>
+          <MenuItem value={240}>4 heures</MenuItem>
+        </TextField>
+        <Box sx={{ ml: 'auto', color: 'text.secondary', fontSize: '0.9rem' }}>
+          {availabilityLoading ? 'Chargement...' : (
+            availabilityData?.summary ? (
+              `🟢 ${availabilityData.summary.available} disponible(s) | 🔴 ${availabilityData.summary.occupied} occupée(s) ${availabilityData.summary.partiallyOccupied > 0 ? `| 🟡 ${availabilityData.summary.partiallyOccupied} partiellement` : ''}`
+            ) : ''
+          )}
+        </Box>
+      </Box>
+
       {/* Vue Tableau */}
       {viewMode === 'table' ? (
         <TableContainer component={Paper}>
@@ -304,11 +380,11 @@ const RoomsManagement: React.FC = () => {
                       </Box>
                     </TableCell>
                     <TableCell>
-                      <Chip
-                        label={room.statut === 'disponible' ? 'Disponible' : 'Indisponible'}
-                        color={room.statut === 'disponible' ? 'success' : 'error'}
-                        size="small"
-                      />
+                      {occupiedMap[room.id] ? (
+                        <Chip label="Occupée" size="small" sx={{ bgcolor: '#fee2e2', color: '#ef4444', fontWeight: 600 }} />
+                      ) : (
+                        <Chip label="Disponible" size="small" sx={{ bgcolor: '#dcfce7', color: '#22c55e', fontWeight: 600 }} />
+                      )}
                     </TableCell>
                     <TableCell align="center">
                       <Tooltip title="Modifier">
@@ -349,23 +425,19 @@ const RoomsManagement: React.FC = () => {
         /* Vue Grille avec RoomCard */
         <Grid container spacing={2}>
           {filteredRooms.length === 0 ? (
-            <>
-              {/* @ts-expect-error - MUI Grid item prop compatibility */}
-              <Grid item xs={12}>
-                <Paper sx={{ p: 4, textAlign: 'center' }}>
-                  <Typography color="text.secondary">Aucune salle trouvée</Typography>
-                </Paper>
-              </Grid>
-            </>
+            <Grid size={{ xs: 12 }}>
+              <Paper sx={{ p: 4, textAlign: 'center' }}>
+                <Typography color="text.secondary">Aucune salle trouvée</Typography>
+              </Paper>
+            </Grid>
           ) : (
             paginatedRooms.map((room) => (
-              <>
-                {/* @ts-expect-error - MUI Grid item prop compatibility */}
-                <Grid item xs={12} sm={6} key={room.id}>
+              <Grid size={{ xs: 12, sm: 6 }} key={room.id}>
                   <Box sx={{ position: 'relative' }}>
                     <RoomCard
                       room={room}
                       onView={() => handleOpenDialog(room)}
+                      isOccupiedAt={!!occupiedMap[room.id]}
                     />
                     {/* Boutons d'action overlay */}
                     <Box
@@ -399,7 +471,6 @@ const RoomsManagement: React.FC = () => {
                     </Box>
                   </Box>
                 </Grid>
-              </>
             ))
           )}
         </Grid>

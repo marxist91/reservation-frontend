@@ -1,8 +1,11 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useRooms } from '../../hooks/useRooms';
 import { useReservations } from '../../hooks/useReservations';
 import RoomCard from '@/components/rooms/RoomCard';
+import apiClient from '@/api/client';
+import { format } from 'date-fns';
 import ReservationForm from '@/components/reservations/ReservationForm';
 import type { Room } from '@/types';
 import {
@@ -37,6 +40,38 @@ const SearchRooms: React.FC = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(12);
+  const [selectedDate, setSelectedDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
+  const [selectedHour, setSelectedHour] = useState<string>(new Date().getHours().toString().padStart(2, '0') + ':00');
+  const [duration, setDuration] = useState<number>(60); // Durée en minutes (défaut 1h)
+
+  // Récupérer la disponibilité des salles via l'endpoint dédié
+  const { data: availabilityData, isLoading: availabilityLoading } = useQuery<any>({
+    queryKey: ['rooms-availability', selectedDate, selectedHour, duration],
+    queryFn: async () => {
+      try {
+        const response = await apiClient.get('/rooms/availability', {
+          params: { date: selectedDate, time: selectedHour, duration }
+        });
+        console.log('📅 Disponibilité des salles reçue:', response.data);
+        return response.data;
+      } catch (err) {
+        console.error('Erreur récupération disponibilité salles', err);
+        return { rooms: [], summary: { total: 0, available: 0, occupied: 0 } };
+      }
+    },
+    enabled: !!selectedDate && !!selectedHour,
+  });
+
+  const occupiedMap = useMemo(() => {
+    const map: Record<number, boolean> = {};
+    (availabilityData?.rooms || []).forEach((room: any) => {
+      if (room.occupied || room.partiallyOccupied) {
+        map[room.id] = true;
+      }
+    });
+    console.log('🗺️ Occupation map générée:', map);
+    return map;
+  }, [availabilityData]);
 
   const handleChangePage = (_event: unknown, newPage: number): void => {
     setPage(newPage);
@@ -101,6 +136,50 @@ const SearchRooms: React.FC = () => {
       </Box>
 
       <Paper sx={{ p: 2, mb: 3, borderRadius: 2 }}>
+        {/* Sélecteurs date / heure / durée */}
+        <Box display="flex" gap={2} alignItems="center" mb={2} flexWrap="wrap">
+          <TextField
+            label="Date"
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            InputLabelProps={{ shrink: true }}
+            size="small"
+          />
+          <TextField
+            label="Heure de début"
+            type="time"
+            value={selectedHour}
+            onChange={(e) => setSelectedHour(e.target.value)}
+            inputProps={{ step: 900 }}
+            size="small"
+          />
+          <TextField
+            label="Durée"
+            select
+            value={duration}
+            onChange={(e) => setDuration(Number(e.target.value))}
+            size="small"
+            sx={{ minWidth: 120 }}
+          >
+            <MenuItem value={15}>15 min</MenuItem>
+            <MenuItem value={30}>30 min</MenuItem>
+            <MenuItem value={60}>1 heure</MenuItem>
+            <MenuItem value={90}>1h30</MenuItem>
+            <MenuItem value={120}>2 heures</MenuItem>
+            <MenuItem value={180}>3 heures</MenuItem>
+            <MenuItem value={240}>4 heures</MenuItem>
+          </TextField>
+          <Box sx={{ ml: 'auto', color: 'text.secondary', fontSize: '0.9rem' }}>
+            {availabilityLoading ? 'Chargement...' : (
+              availabilityData?.summary ? (
+                `🟢 ${availabilityData.summary.available} disponible(s) | 🔴 ${availabilityData.summary.occupied} occupée(s) ${availabilityData.summary.partiallyOccupied > 0 ? `| 🟡 ${availabilityData.summary.partiallyOccupied} partiellement` : ''}`
+              ) : ''
+            )}
+          </Box>
+        </Box>
+
+        {/* Filtres de recherche */}
         <Box display="flex" gap={2} flexWrap="wrap" alignItems="center">
           <TextField
             placeholder="Rechercher une salle..."
@@ -163,13 +242,13 @@ const SearchRooms: React.FC = () => {
         <>
           <Grid container spacing={2}>
             {paginatedRooms.map((room) => (
-              /* @ts-expect-error MUI Grid item prop */
-              <Grid item xs={12} sm={6} md={4} lg={3} key={room.id}>
+              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={room.id}>
                 <RoomCard
                   room={room}
                   onView={handleViewDetails}
                   onReserve={handleOpenReservation}
                   compact
+                  isOccupiedAt={occupiedMap[room.id] ? true : false}
                 />
               </Grid>
             ))}

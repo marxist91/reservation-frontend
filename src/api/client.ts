@@ -6,8 +6,10 @@ interface ApiError {
   data?: unknown;
 }
 
+const defaultApiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+
 const apiClient: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: defaultApiUrl,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -39,8 +41,8 @@ apiClient.interceptors.response.use(
     // Token expiré ou invalide - seulement sur 401
     if (error.response?.status === 401) {
       const currentPath = window.location.pathname;
-      // Ne pas rediriger si déjà sur la page login
-      if (currentPath !== '/login' && currentPath !== '/register') {
+      // Ne pas rediriger si déjà sur la page login, register, ou page d'accueil
+      if (currentPath !== '/login' && currentPath !== '/register' && currentPath !== '/') {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         window.location.href = '/login';

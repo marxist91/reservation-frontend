@@ -7,7 +7,13 @@ interface GetRoomsResponse {
 }
 
 export const roomsAPI = {
-  // Récupérer toutes les salles
+  // Récupérer toutes les salles (route publique pour page d'accueil)
+  getAllPublic: async (): Promise<Room[]> => {
+    const response = await apiClient.get<Room[]>(`/rooms/public?_t=${Date.now()}`);
+    return Array.isArray(response.data) ? response.data : [];
+  },
+
+  // Récupérer toutes les salles (authentifié)
   getAll: async (): Promise<Room[]> => {
     // Ajouter un timestamp pour éviter le cache
     const response = await apiClient.get<GetRoomsResponse | Room[]>(`/rooms?_t=${Date.now()}`);

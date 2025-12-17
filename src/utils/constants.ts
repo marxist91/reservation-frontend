@@ -54,6 +54,19 @@ export const RESERVATION_STATUS_COLORS: Record<string, 'warning' | 'success' | '
   'rejetee': 'error',
 };
 
+// Couleurs hex spécifiques pour l'affichage des événements dans un calendrier
+export const RESERVATION_STATUS_EVENT_COLORS: Record<string, string> = {
+  'en_attente': '#ed6c02', // orange
+  'validée': '#2e7d32',
+  'validee': '#2e7d32',
+  'confirmee': '#2e7d32',
+  'annulée': '#fdd835',
+  'annulee': '#fdd835',
+  'refusée': '#d32f2f',
+  'refusee': '#d32f2f',
+  'rejetee': '#d32f2f',
+};
+
 // Équipements disponibles
 export const EQUIPMENTS = {
   PROJECTEUR: 'projecteur',

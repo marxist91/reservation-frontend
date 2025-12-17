@@ -50,8 +50,7 @@ const RoomList: React.FC<RoomListProps> = ({
   return (
     <Grid container spacing={3}>
       {rooms.map((room) => (
-        /* @ts-expect-error MUI Grid item prop typing issue */
-        <Grid item xs={12} sm={6} md={4} lg={3} key={room.id}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={room.id}>
           <RoomCard
             room={room}
             onReserve={onReserve}

@@ -27,6 +27,9 @@ export enum NotificationType {
   REMINDER = 'reminder',
   RESERVATION_CREATED_GROUP = 'reservation_created_group',
   ADMIN_NEW_RESERVATION_GROUP = 'admin_new_reservation_group',
+  ALTERNATIVE_PROPOSED = 'alternative_proposed',
+  ALTERNATIVE_ACCEPTED = 'alternative_accepted',
+  ALTERNATIVE_REJECTED = 'alternative_rejected',
   SYSTEM = 'system',
 }
 
@@ -105,6 +108,11 @@ export interface Reservation {
   User?: User; // Alias for utilisateur
   salle?: Room;
   Room?: Room; // Alias for salle (backend compatibility)
+  // Département lié (association provenant du backend)
+  department?: Department;
+  Department?: Department;
+  // Ancien champ texte (compatibilité avec données historisées)
+  departement?: string;
 }
 
 export interface Notification {
@@ -122,21 +130,57 @@ export interface Notification {
   reservation?: Reservation;
 }
 
+export interface ProposedAlternative {
+  id: number;
+  original_reservation_id: number;
+  proposed_room_id: number;
+  proposed_date_debut: string; // ISO datetime
+  proposed_date_fin: string; // ISO datetime
+  status: 'pending' | 'accepted' | 'rejected';
+  motif?: string;
+  proposed_by: number;
+  created_at: string;
+  updated_at: string;
+  
+  // Relations
+  originalReservation?: Reservation;
+  proposedRoom?: Room;
+  proposer?: User;
+}
+
 export interface History {
   id: number;
   user_id: number;
   type: HistoryEntityType;
   action: HistoryActionType;
   entity_id?: number;
-  details?: string;
+  reservation_id?: number; // Ajout pour correspondre au backend
+  description?: string; // Ajout pour correspondre au backend
+  details?: string | Record<string, unknown>; // Peut être JSON ou string
   metadata?: Record<string, unknown>;
   created_at: string;
   
   // Relations
   utilisateur?: User;
+  reservation?: Reservation;
 }
-
 // ============= API RESPONSES =============
+
+export interface Department {
+  id: number;
+  name: string;
+  description?: string | null;
+  slug?: string | null;
+  responsable_id?: number | null;
+  responsable?: {
+    id: number;
+    nom: string;
+    prenom: string;
+    email: string;
+  } | null;
+  created_at: string;
+  updated_at: string;
+}
 
 export interface ApiResponse<T> {
   success: boolean;
@@ -188,6 +232,8 @@ export interface ReservationFormData {
   heure_fin: string;
   motif?: string;
   remarques?: string;
+  // Nouveau : département choisi par l'utilisateur (libellé)
+  departement?: string;
 }
 
 export interface RoomFormData {
