@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
@@ -35,13 +34,14 @@ describe('LoginForm', () => {
     );
 
     const passwordInput = screen.getByLabelText(/Mot de passe/i) as HTMLInputElement;
-    const toggleButton = screen.getAllByRole('button').find(b => b.getAttribute('aria-label') === null) || screen.getAllByRole('button')[1];
+    const buttons = screen.getAllByRole('button');
+    const toggleButton = buttons.find(b => b.getAttribute('aria-label') === null) ?? buttons[1];
 
     // Initially password type should be password
     expect(passwordInput.type).toBe('password');
 
     // Click toggle
-    fireEvent.click(toggleButton);
+    if (toggleButton) fireEvent.click(toggleButton);
     // After toggle it should be text
     expect(passwordInput.type).toBe('text');
   });
