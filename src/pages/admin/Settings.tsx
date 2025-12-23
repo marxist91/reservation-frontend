@@ -70,6 +70,7 @@ const Settings: React.FC = () => {
   const [notifyOnCancellation, setNotifyOnCancellation] = useState(true);
   const [notifyOnModification, setNotifyOnModification] = useState(true);
   const [reminderBeforeHours, setReminderBeforeHours] = useState(24);
+  const [suppressAdminIfResponsableNotified, setSuppressAdminIfResponsableNotified] = useState(true);
 
   // États pour la sécurité
   const [requireApproval, setRequireApproval] = useState(true);
@@ -128,6 +129,8 @@ const Settings: React.FC = () => {
       setNotifyOnCancellation(data.notify_on_cancellation);
       setNotifyOnModification(data.notify_on_modification);
       setReminderBeforeHours(data.reminder_before_hours);
+      // Nouveau réglage: suppression notifications admins
+      setSuppressAdminIfResponsableNotified(!!data.suppress_admin_if_responsable_notified);
       
       // Sécurité
       setRequireApproval(data.require_approval);
@@ -203,7 +206,8 @@ const Settings: React.FC = () => {
         notify_on_approval: notifyOnApproval,
         notify_on_rejection: notifyOnRejection,
         notify_on_cancellation: notifyOnCancellation,
-        notify_on_modification: notifyOnModification,
+          notify_on_modification: notifyOnModification,
+          suppress_admin_if_responsable_notified: suppressAdminIfResponsableNotified,
         reminder_before_hours: reminderBeforeHours,
       });
       toast.success('Paramètres de notification sauvegardés');
@@ -495,6 +499,15 @@ const Settings: React.FC = () => {
                       />
                     }
                     label="Modification de réservation"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={suppressAdminIfResponsableNotified}
+                        onChange={(e) => setSuppressAdminIfResponsableNotified(e.target.checked)}
+                      />
+                    }
+                    label="Ne pas notifier les admins si le responsable est déjà notifié"
                   />
                   <TextField
                     fullWidth

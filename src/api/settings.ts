@@ -11,6 +11,8 @@ export interface SettingsData {
   // Notifications
   enable_email_notifications: boolean;
   enable_sms_notifications: boolean;
+  // Supprimer notifications admins si responsable déjà notifié
+  suppress_admin_if_responsable_notified?: boolean;
   notify_on_booking: boolean;
   notify_on_approval: boolean;
   notify_on_rejection: boolean;
