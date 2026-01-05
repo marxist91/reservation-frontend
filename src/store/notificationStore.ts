@@ -94,7 +94,7 @@ export const useNotificationStore = create<NotificationState>()(
                 severity = 'warning';
                 actionUrl = '/admin/support';
                 break;
-              case 'support_response':
+              case NotificationType.SUPPORT_RESPONSE:
                 severity = 'info';
                 actionUrl = '/my-tickets';
                 break;

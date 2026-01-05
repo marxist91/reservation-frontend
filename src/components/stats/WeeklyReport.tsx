@@ -60,7 +60,7 @@ const WeeklyReport: React.FC = () => {
 
   const { data: report, isLoading, error, refetch } = useQuery<WeeklyReportData>({
     queryKey: ['weekly-report'],
-    queryFn: statsAPI.getWeeklyReport,
+    queryFn: () => statsAPI.getWeeklyReport(),
   });
 
   const formatDate = (dateStr: string) => {

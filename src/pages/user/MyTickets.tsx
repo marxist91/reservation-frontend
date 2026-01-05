@@ -159,8 +159,8 @@ const MyTickets: React.FC = () => {
       ) : (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {tickets.map((ticket) => {
-            const category = categoryConfig[ticket.category] || categoryConfig.general;
-            const status = statusConfig[ticket.status] || statusConfig.open;
+            const category = categoryConfig[ticket.category] ?? { icon: <QuestionIcon />, color: '#607d8b', label: 'Général' };
+            const status = statusConfig[ticket.status] ?? { color: 'default' as const, label: 'Ouvert', icon: <PendingIcon /> };
             const isExpanded = expandedTicket === ticket.id;
             const responses = Array.isArray(ticket.responses) ? ticket.responses : [];
             const hasResponses = responses.length > 0;

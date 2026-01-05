@@ -34,7 +34,6 @@ import {
   Lightbulb as SuggestionIcon,
   Help as QuestionIcon,
   MeetingRoom as RoomIcon,
-  MoreVert as MoreIcon,
   Search as SearchIcon,
   Reply as ReplyIcon,
   CheckCircle as ResolvedIcon,
@@ -316,9 +315,9 @@ const SupportTickets: React.FC = () => {
       ) : (
         <List sx={{ bgcolor: 'background.paper', borderRadius: 2 }}>
           {filteredTickets.map((ticket, index) => {
-            const category = categoryConfig[ticket.category] || categoryConfig.general;
-            const priority = priorityConfig[ticket.priority] || priorityConfig.normal;
-            const status = statusConfig[ticket.status] || statusConfig.open;
+            const category = categoryConfig[ticket.category] ?? { icon: <QuestionIcon />, color: '#607d8b', label: 'Général' };
+            const priority = priorityConfig[ticket.priority] ?? { color: 'info' as const, label: 'Normale' };
+            const status = statusConfig[ticket.status] ?? { color: 'warning' as const, label: 'Ouvert', icon: <PendingIcon /> };
 
             return (
               <Box key={ticket.id}>

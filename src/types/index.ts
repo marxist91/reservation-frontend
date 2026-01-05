@@ -31,6 +31,7 @@ export enum NotificationType {
   ALTERNATIVE_ACCEPTED = 'alternative_accepted',
   ALTERNATIVE_REJECTED = 'alternative_rejected',
   SUPPORT_TICKET = 'support_ticket',
+  SUPPORT_RESPONSE = 'support_response',
   SYSTEM = 'system',
 }
 
