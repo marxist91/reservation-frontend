@@ -452,8 +452,8 @@ const LandingPage = () => {
             left: 0,
             right: 0,
             bottom: 0,
-            // Dégradé léger en bas pour lisibilité du texte, photo visible
-            background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.6) 100%)',
+            // Overlay uniforme léger pour lisibilité du texte
+            background: 'rgba(0,0,0,0.35)',
           },
           // Grille animée en overlay
           '&::after': {
@@ -634,7 +634,7 @@ const LandingPage = () => {
                   variant="h5" 
                   fontWeight="bold" 
                   color="#f9a825"
-                  sx={{ textShadow: '0 2px 10px rgba(249,168,37,0.5)' }}
+                  sx={{ textShadow: '0 2px 10px rgba(248, 245, 240, 1)' }}
                 >
                   {stat.value}
                 </Typography>
