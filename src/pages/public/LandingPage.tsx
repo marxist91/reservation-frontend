@@ -562,13 +562,8 @@ const LandingPage = () => {
               animationFillMode: 'both',
               textShadow: '2px 2px 4px rgba(0,0,0,0.8), 0 0 20px rgba(0,0,0,0.5)',
               '& span': {
-                background: 'linear-gradient(90deg, #f9a825, #ffca28, #f9a825)',
-                backgroundSize: '200% auto',
-                backgroundClip: 'text',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                animation: `${shimmer} 3s linear infinite`,
-                filter: 'drop-shadow(2px 2px 4px rgba(0,0,0,0.6))',
+                color: '#f9a825',
+                textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
               },
             }}
           >
