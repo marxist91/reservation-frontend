@@ -16,7 +16,7 @@ export const historyApi = {
 
   // Récupérer l'historique de l'utilisateur connecté
   getMyHistory: async (): Promise<History[]> => {
-    const response = await apiClient.get<History[]>('/history/me');
+    const response = await apiClient.get<History[]>('/history/mine');
     return response.data;
   }
 };

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Box,
   Paper,
@@ -51,18 +51,25 @@ const History: React.FC = () => {
   const isAdmin = currentUser?.role === 'admin';
 
   const {
-    history,
+    myHistory,
+    fetchMyHistory,
     filters,
     setFilters,
     resetFilters,
+    isLoading,
   } = useHistoryStore();
 
   const [searchTerm, setSearchTerm] = useState('');
 
-  const personalHistory = useMemo(() => history, [history]);
+  // Charger l'historique personnel au montage
+  useEffect(() => {
+    fetchMyHistory();
+  }, [fetchMyHistory]);
+
+  const personalHistory = useMemo(() => myHistory, [myHistory]);
   
-  console.log('📜 Historique utilisateur reçu:', history.length, 'entrées');
-  console.log('📜 Types présents:', [...new Set(history.map(h => h.type))]);
+  console.log('📜 Historique personnel reçu:', myHistory.length, 'entrées');
+  console.log('📜 Types présents:', [...new Set(myHistory.map(h => h.type))]);
   
   const filteredHistory = useMemo(() => {
     let filtered = personalHistory;
@@ -188,7 +195,7 @@ const History: React.FC = () => {
             Exporter
           </Button>
           <Tooltip title="Actualiser">
-            <IconButton>
+            <IconButton onClick={() => fetchMyHistory()} disabled={isLoading}>
               <RefreshIcon />
             </IconButton>
           </Tooltip>

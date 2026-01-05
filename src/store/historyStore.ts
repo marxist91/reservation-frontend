@@ -40,12 +40,14 @@ interface ExtendedHistory {
 
 interface HistoryState {
   history: ExtendedHistory[];
+  myHistory: ExtendedHistory[];
   isLoading: boolean;
   error: string | null;
   filters: HistoryFilters;
   
   // Actions
   fetchHistory: () => Promise<void>;
+  fetchMyHistory: () => Promise<void>;
   addHistoryEntry: (entry: Partial<ExtendedHistory>) => void;
   setFilters: (filters: Partial<HistoryFilters>) => void;
   resetFilters: () => void;
@@ -75,6 +77,7 @@ export const useHistoryStore = create<HistoryState>()(
     (set, get) => ({
       // État
       history: [],
+      myHistory: [],
       isLoading: false,
       error: null,
       filters: {
@@ -153,6 +156,69 @@ export const useHistoryStore = create<HistoryState>()(
           const message = error instanceof Error ? error.message : 'Erreur inconnue';
           console.error("Erreur chargement historique:", error);
           set({ error: message, isLoading: false, history: [] });
+        }
+      },
+
+      // Récupérer l'historique personnel de l'utilisateur connecté
+      fetchMyHistory: async (): Promise<void> => {
+        set({ isLoading: true, error: null });
+        try {
+          const data = await historyApi.getMyHistory();
+          
+          if (!Array.isArray(data)) {
+            console.warn('⚠️ La réponse n\'est pas un tableau:', data);
+            set({ myHistory: [], isLoading: false, error: 'Format de données invalide' });
+            return;
+          }
+          
+          // Mapper les données backend vers le format frontend
+          const mappedHistory: ExtendedHistory[] = data.map((h): ExtendedHistory => {
+            
+            let type: HistoryType = 'info';
+            const backendType = h.type?.toUpperCase();
+            const action = h.action?.toLowerCase() || '';
+            
+            if (backendType === 'VALIDATION') {
+              type = action.includes('refus') ? 'reservation_rejected' : 'reservation_validated';
+            }
+            else if (backendType === 'CREATION') type = 'reservation_created';
+            else if (backendType === 'ANNULATION') type = 'reservation_cancelled';
+            else if (backendType === 'REFUS') type = 'reservation_rejected';
+            else if (backendType === 'MODIFICATION') type = 'reservation_updated';
+            else if (backendType === 'SUPPRESSION') type = 'reservation_deleted';
+            else type = (h.type?.toLowerCase() as HistoryType) || 'info';
+
+            let parsedDetails = {};
+            if (h.details) {
+              if (typeof h.details === 'string') {
+                try {
+                  parsedDetails = JSON.parse(h.details);
+                } catch {
+                  parsedDetails = {};
+                }
+              } else if (typeof h.details === 'object') {
+                parsedDetails = h.details;
+              }
+            }
+
+            return {
+              id: h.id,
+              timestamp: h.created_at || new Date().toISOString(),
+              type: type,
+              action: h.action || '',
+              description: h.description || '',
+              userId: h.user_id || null,
+              userName: h.utilisateur ? h.utilisateur.nom : 'Moi',
+              details: parsedDetails,
+              reservationId: h.reservation_id || h.entity_id,
+            };
+          });
+          
+          set({ myHistory: mappedHistory, isLoading: false });
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Erreur inconnue';
+          console.error("Erreur chargement historique personnel:", error);
+          set({ error: message, isLoading: false, myHistory: [] });
         }
       },
       
