@@ -34,7 +34,9 @@ import {
   History as HistoryIcon,
   Notifications as NotificationsIcon,
   Settings as SettingsIcon,
+  HelpOutline as HelpIcon,
 } from '@mui/icons-material';
+import UserGuide from './UserGuide';
 
 const drawerWidth = 240;
 
@@ -82,6 +84,11 @@ const userMenuItems: MenuItem[] = [
     text: 'Mon Historique', 
     icon: <HistoryIcon />, 
     path: '/history',
+  },
+  { 
+    text: 'Mes Signalements', 
+    icon: <HelpIcon />, 
+    path: '/my-tickets',
   },
   { 
     text: 'Mon Profil', 
@@ -133,6 +140,11 @@ const adminMenuItems: MenuItem[] = [
     path: '/admin/statistics',
   },
   { 
+    text: 'Support & Signalements', 
+    icon: <HelpIcon />, 
+    path: '/admin/support',
+  },
+  { 
     text: 'Paramètres',
     icon: <SettingsIcon />,
     path: '/admin/settings',
@@ -149,6 +161,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   const navigate = useNavigate();
   const { isAdmin, isResponsable, fullName, roleLabel, initials } = useAuth();
   const [adminOpen, setAdminOpen] = useState(true);
+  const [guideOpen, setGuideOpen] = useState(false);
 
   // Récupérer le nombre de départements pour afficher un badge
   const { data: departments = [], isLoading: depsLoading } = useQuery({
@@ -269,7 +282,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                   if (isAdmin) {
                     itemsToRender = adminMenuItems;
                   } else if (isResponsable) {
-                    const excluded = ['/admin/users', '/admin/rooms', '/admin/departments'];
+                    const excluded = ['/admin/users', '/admin/rooms', '/admin/departments', '/admin/settings', '/admin/support'];
                     itemsToRender = adminMenuItems.filter(i => !excluded.includes(i.path));
                   }
                   return itemsToRender.map((item) => (
@@ -290,6 +303,32 @@ const Sidebar: React.FC<SidebarProps> = ({
         </>
       )}
 
+      {/* Bouton Guide d'utilisation */}
+      <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)', mx: 2 }} />
+      <Box sx={{ px: 1.5, py: 1 }}>
+        <ListItemButton
+          onClick={() => setGuideOpen(true)}
+          sx={{
+            borderRadius: 2,
+            color: 'rgba(255,255,255,0.9)',
+            bgcolor: 'rgba(249, 168, 37, 0.15)',
+            border: '1px dashed rgba(249, 168, 37, 0.5)',
+            '&:hover': {
+              bgcolor: 'rgba(249, 168, 37, 0.25)',
+              borderColor: '#f9a825',
+            },
+          }}
+        >
+          <ListItemIcon sx={{ minWidth: 40, color: '#f9a825' }}>
+            <HelpIcon />
+          </ListItemIcon>
+          <ListItemText
+            primary="Guide d'utilisation"
+            primaryTypographyProps={{ fontSize: '0.85rem', fontWeight: 600 }}
+          />
+        </ListItemButton>
+      </Box>
+
       {/* Footer avec info utilisateur */}
       <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
       <Box sx={{ p: 2 }}>
@@ -301,6 +340,9 @@ const Sidebar: React.FC<SidebarProps> = ({
           </Box>
         </Box>
       </Box>
+
+      {/* Modal du guide */}
+      <UserGuide open={guideOpen} onClose={() => setGuideOpen(false)} />
     </Box>
   );
 

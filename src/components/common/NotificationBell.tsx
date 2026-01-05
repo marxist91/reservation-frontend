@@ -25,7 +25,7 @@ import {
 } from '@mui/icons-material';
 import { useNotificationStore } from '@/store/notificationStore';
 import { useNavigate } from 'react-router-dom';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import type { ExtendedNotification } from '@/store/notificationStore';
 
@@ -81,11 +81,19 @@ const NotificationBell: React.FC = () => {
     return <InfoIcon {...iconProps} sx={{ color: 'info.main' }} />;
   };
 
-  const getTimeAgo = (timestamp: string): string => {
+  const getTimeAgo = (timestamp: string | undefined): string => {
     try {
-      return formatDistanceToNow(new Date(timestamp), { addSuffix: true, locale: fr });
+      if (!timestamp) {
+        return '';
+      }
+      const date = new Date(timestamp);
+      if (isNaN(date.getTime())) {
+        return '';
+      }
+      const exact = format(date, 'HH:mm', { locale: fr });
+      return exact;
     } catch {
-      return 'À l\'instant';
+      return '';
     }
   };
 
@@ -201,7 +209,7 @@ const NotificationBell: React.FC = () => {
                             {notification.message}
                           </Typography>
                           <Typography variant="caption" color="text.secondary" fontSize="0.65rem">
-                            {getTimeAgo(notification.created_at)}
+                            {getTimeAgo(notification.createdAt || notification.created_at)}
                           </Typography>
                         </>
                       }

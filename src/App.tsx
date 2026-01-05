@@ -20,6 +20,7 @@ import SearchRooms from './pages/user/SearchRooms';
 import RoomDetails from './pages/user/RoomDetails';
 import Profile from './pages/user/Profile';
 import Calendar from './pages/user/Calendar';
+import MyTickets from './pages/user/MyTickets';
 
 // Pages Admin
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -31,6 +32,7 @@ import AdminHistory from './pages/admin/AdminHistory';
 import Statistics from './pages/admin/Statistics';
 import Departments from './pages/admin/Departments';
 import Settings from './pages/admin/Settings';
+import SupportTickets from './pages/admin/SupportTickets';
 
 // Pages Autres
 import NotFound from './pages/NotFound';
@@ -233,6 +235,7 @@ const App: React.FC = () => {
               {/* Routes communes (notifications et historique) */}
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/history" element={<History />} />
+              <Route path="/my-tickets" element={<MyTickets />} />
 
               {/* Routes Admin */}
               <Route
@@ -304,6 +307,14 @@ const App: React.FC = () => {
                 element={
                   <ProtectedRoute requiredRole={ADMIN_ROLE}>
                     <Settings />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/support"
+                element={
+                  <ProtectedRoute requiredRole={ADMIN_ROLE}>
+                    <SupportTickets />
                   </ProtectedRoute>
                 }
               />

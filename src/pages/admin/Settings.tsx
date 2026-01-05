@@ -24,7 +24,9 @@ import {
   ColorLens as ColorLensIcon,
   Save as SaveIcon,
   Refresh as RefreshIcon,
+  Repeat as RepeatIcon,
 } from '@mui/icons-material';
+import RecurringMeetingsManager from '../../components/admin/RecurringMeetingsManager';
 import toast from 'react-hot-toast';
 import { settingsAPI } from '../../api/settings';
 
@@ -335,6 +337,7 @@ const Settings: React.FC = () => {
           <Tab icon={<NotificationsIcon />} label="Notifications" />
           <Tab icon={<SecurityIcon />} label="Sécurité" />
           <Tab icon={<ScheduleIcon />} label="Horaires" />
+          <Tab icon={<RepeatIcon />} label="Réunions récurrentes" />
           <Tab icon={<ColorLensIcon />} label="Apparence" />
           <Tab icon={<EmailIcon />} label="Email" />
         </Tabs>
@@ -721,8 +724,13 @@ const Settings: React.FC = () => {
           </Grid>
         </TabPanel>
 
-        {/* Onglet Apparence */}
+        {/* Onglet Réunions Récurrentes */}
         <TabPanel value={tabValue} index={4}>
+          <RecurringMeetingsManager />
+        </TabPanel>
+
+        {/* Onglet Apparence */}
+        <TabPanel value={tabValue} index={5}>
           <Grid container spacing={3}>
             <Grid size={{ xs: 12, md: 6 }}>
               <Card>
@@ -799,7 +807,7 @@ const Settings: React.FC = () => {
         </TabPanel>
 
         {/* Onglet Email */}
-        <TabPanel value={tabValue} index={5}>
+        <TabPanel value={tabValue} index={6}>
           <Grid container spacing={3}>
             <Grid size={{ xs: 12 }}>
               <Alert severity="warning">

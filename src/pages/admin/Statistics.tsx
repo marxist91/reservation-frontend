@@ -63,6 +63,7 @@ import { roomsAPI } from '@/api/rooms';
 import { usersAPI } from '@/api/users';
 import type { Room, User } from '@/types';
 import { format, startOfMonth, subMonths, parseISO, endOfMonth } from 'date-fns';
+import WeeklyReport from '@/components/admin/WeeklyReport';
 import { DatePicker } from '@mui/x-date-pickers';
 import TablePagination from '@mui/material/TablePagination';
 import { fr } from 'date-fns/locale';
@@ -585,7 +586,13 @@ const Statistics: React.FC = () => {
       <Tabs value={activeTab} onChange={handleTabChange} aria-label="Stat tabs" sx={{ mb: 2 }}>
         <Tab label="Général" />
         <Tab label="Par département" />
+        <Tab label="📊 Rapport Hebdo" sx={{ fontWeight: 'bold' }} />
       </Tabs>
+
+      {/* Onglet Rapport Hebdomadaire */}
+      {activeTab === 2 && (
+        <WeeklyReport />
+      )}
 
       {/* Top salles et utilisateurs */}
       <Grid container spacing={3} mb={3}>

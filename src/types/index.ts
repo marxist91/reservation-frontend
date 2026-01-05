@@ -30,6 +30,7 @@ export enum NotificationType {
   ALTERNATIVE_PROPOSED = 'alternative_proposed',
   ALTERNATIVE_ACCEPTED = 'alternative_accepted',
   ALTERNATIVE_REJECTED = 'alternative_rejected',
+  SUPPORT_TICKET = 'support_ticket',
   SYSTEM = 'system',
 }
 
@@ -125,6 +126,8 @@ export interface Notification {
   reservation_id?: number;
   created_at: string;
   updated_at: string;
+  createdAt?: string; // Alias Sequelize
+  updatedAt?: string; // Alias Sequelize
   
   // Relations
   reservation?: Reservation;

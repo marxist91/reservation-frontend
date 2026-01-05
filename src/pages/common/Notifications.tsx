@@ -66,9 +66,12 @@ const Notifications: React.FC = () => {
 
   const getTimeAgo = (timestamp: string): string => {
     try {
-      return formatDistanceToNow(new Date(timestamp), { addSuffix: true, locale: fr });
+      const date = new Date(timestamp);
+      const relative = formatDistanceToNow(date, { addSuffix: true, locale: fr });
+      const exact = format(date, 'HH:mm', { locale: fr });
+      return `${relative} (${exact})`;
     } catch {
-      return 'À l\'instant';
+      return format(new Date(), 'HH:mm', { locale: fr });
     }
   };
 

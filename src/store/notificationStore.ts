@@ -90,6 +90,14 @@ export const useNotificationStore = create<NotificationState>()(
                 severity = 'info';
                 actionUrl = '/admin/reservations';
                 break;
+              case NotificationType.SUPPORT_TICKET:
+                severity = 'warning';
+                actionUrl = '/admin/support';
+                break;
+              case 'support_response':
+                severity = 'info';
+                actionUrl = '/my-tickets';
+                break;
               default:
                 severity = 'info';
             }

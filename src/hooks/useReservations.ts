@@ -165,7 +165,30 @@ export const useReservations = (params: Record<string, unknown> = {}): UseReserv
         console.error('Status:', error.response.status);
         console.error('Data:', error.response.data);
       }
-      toast.error(error.response?.data?.message || 'Erreur lors de la création');
+      
+      // Extraire le message d'erreur du backend (supporte message ou error)
+      const backendMessage = error.response?.data?.message || error.response?.data?.error;
+      
+      // Messages personnalisés selon le code HTTP et le contenu
+      let userMessage = 'Erreur lors de la création de la réservation';
+      
+      if (error.response?.status === 409) {
+        // Conflit - créneau déjà réservé
+        userMessage = '⚠️ Ce créneau est déjà réservé. Veuillez choisir un autre horaire.';
+      } else if (error.response?.status === 400) {
+        // Erreur de validation
+        userMessage = backendMessage || 'Données de réservation invalides';
+      } else if (error.response?.status === 401 || error.response?.status === 403) {
+        // Erreur d'authentification/autorisation
+        userMessage = 'Vous n\'êtes pas autorisé à effectuer cette action';
+      } else if (backendMessage) {
+        userMessage = backendMessage;
+      } else if (!error.response) {
+        // Pas de réponse du serveur
+        userMessage = 'Impossible de contacter le serveur. Vérifiez votre connexion.';
+      }
+      
+      toast.error(userMessage);
     },
   });
 
@@ -177,7 +200,12 @@ export const useReservations = (params: Record<string, unknown> = {}): UseReserv
       toast.success('Réservation mise à jour');
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Erreur lors de la mise à jour');
+      const backendMessage = error.response?.data?.message || error.response?.data?.error;
+      if (error.response?.status === 409) {
+        toast.error('⚠️ Ce créneau est déjà réservé. Veuillez choisir un autre horaire.');
+      } else {
+        toast.error(backendMessage || 'Erreur lors de la mise à jour');
+      }
     },
   });
 
@@ -196,7 +224,8 @@ export const useReservations = (params: Record<string, unknown> = {}): UseReserv
       toast.success('Réservation annulée');
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Erreur lors de l\'annulation');
+      const backendMessage = error.response?.data?.message || error.response?.data?.error;
+      toast.error(backendMessage || 'Erreur lors de l\'annulation');
     },
   });
 
