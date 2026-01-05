@@ -73,15 +73,6 @@ const scaleIn = keyframes`
   }
 `;
 
-const shimmer = keyframes`
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-`;
-
 const float = keyframes`
   0%, 100% {
     transform: translateY(0px);
