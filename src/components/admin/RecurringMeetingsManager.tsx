@@ -123,7 +123,10 @@ const RecurringMeetingsManager: React.FC = () => {
       ]);
       setMeetings(Array.isArray(meetingsRes.data) ? meetingsRes.data : []);
       setRooms(Array.isArray(roomsRes.data) ? roomsRes.data : []);
-      setDepartments(Array.isArray(departmentsRes.data) ? departmentsRes.data : []);
+      // Handle departments response format: { data: [...] } or direct array
+      const depsData = departmentsRes.data?.data || departmentsRes.data;
+      setDepartments(Array.isArray(depsData) ? depsData : []);
+      console.log('Départements chargés:', depsData);
       setError(null);
     } catch (err: any) {
       console.error('Erreur chargement:', err);
