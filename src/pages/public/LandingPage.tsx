@@ -423,6 +423,8 @@ const LandingPage = () => {
       {/* Spacer pour compenser le navbar fixe */}
       <Box sx={{ height: 56 }} />
 
+      {/* (sidebar removed) */}
+
       {/* Hero Section - Bannière dynamique avec effets */}
       <Box
         sx={{
@@ -436,6 +438,7 @@ const LandingPage = () => {
           alignItems: 'center',
           justifyContent: 'center',
           overflow: 'hidden',
+          /* no sidebar margin */
           '&::before': {
             content: '""',
             position: 'absolute',

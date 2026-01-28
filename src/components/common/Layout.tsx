@@ -37,9 +37,10 @@ const Layout: React.FC = () => {
         component="main"
         sx={{
           flexGrow: 1,
-          p: { xs: 2, sm: 2.5, md: 3 },
-          width: { xs: '100%', md: `calc(100% - ${drawerWidth}px)` },
-          mt: 8,
+          px: { xs: 2, sm: 2.5, md: 3 },
+          pt: { xs: 2, sm: 2.5, md: 1 },
+          width: { xs: '100%', md: `calc(100% - var(--sidebar-width, ${drawerWidth}px))` },
+          mt: 'var(--appbar-height, 64px)',
           minHeight: '100vh',
           background: 'linear-gradient(135deg, #fafbfc 0%, #f0f2f5 100%)',
         }}

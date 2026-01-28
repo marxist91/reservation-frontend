@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import NotificationBell from './NotificationBell';
@@ -39,6 +39,7 @@ const Navbar: React.FC<NavbarProps> = ({
   title = 'Système de Réservation de Salles',
 }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const toolbarRef = useRef<HTMLDivElement | null>(null);
   
   const navigate = useNavigate();
   const { user, logout, initials, isAdmin, isResponsable } = useAuth();
@@ -72,6 +73,27 @@ const Navbar: React.FC<NavbarProps> = ({
     navigate('/');
   };
 
+  // expose real toolbar/appbar height as CSS variable for precise layout
+  useEffect(() => {
+    const setHeight = () => {
+      try {
+        const el = toolbarRef.current as HTMLElement | null;
+        const h = el ? `${el.offsetHeight}px` : '64px';
+        document.documentElement.style.setProperty('--appbar-height', h);
+      } catch (e) {
+        // ignore
+      }
+    };
+    setHeight();
+    window.addEventListener('resize', setHeight);
+    const obs = new MutationObserver(setHeight);
+    if (toolbarRef.current) obs.observe(toolbarRef.current, { attributes: true, childList: true, subtree: true });
+    return () => {
+      window.removeEventListener('resize', setHeight);
+      try { obs.disconnect(); } catch (e) {}
+    };
+  }, []);
+
   // Couleur de l'avatar basée sur le rôle (utilise isAdmin/isResponsable du hook)
   const getAvatarColor = (): string => {
     if (isAdmin) return 'error.main';
@@ -83,15 +105,15 @@ const Navbar: React.FC<NavbarProps> = ({
     <AppBar
       position="fixed"
       sx={{
-        width: { md: `calc(100% - ${customDrawerWidth}px)` },
-        ml: { md: `${customDrawerWidth}px` },
+        width: { md: `calc(100% - var(--sidebar-width, ${customDrawerWidth}px))` },
+        ml: { md: `var(--sidebar-width, ${customDrawerWidth}px)` },
         background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
         color: '#1a1a2e',
         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
         borderBottom: '3px solid #f9a825',
       }}
     >
-      <Toolbar>
+      <Toolbar ref={toolbarRef}>
         {/* Menu burger pour mobile */}
         <IconButton
           color="inherit"

@@ -1,4 +1,4 @@
-import { useState, type ReactElement } from 'react';
+import { useState, useEffect, type ReactElement } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import {
@@ -13,6 +13,7 @@ import {
   ListItemText,
   Divider,
   Collapse,
+  Tooltip,
   Chip,
   Avatar,
 } from '@mui/material';
@@ -27,6 +28,8 @@ import {
   AdminPanelSettings as AdminIcon,
   ExpandLess,
   ExpandMore,
+  ChevronLeft,
+  ChevronRight,
   CalendarMonth as CalendarIcon,
   Search as SearchIcon,
   Assessment as StatsIcon,
@@ -162,6 +165,22 @@ const Sidebar: React.FC<SidebarProps> = ({
   const { isAdmin, isResponsable, fullName, roleLabel, initials } = useAuth();
   const [adminOpen, setAdminOpen] = useState(true);
   const [guideOpen, setGuideOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  const currentWidth = collapsed ? 64 : width;
+
+  // Expose current sidebar width as a CSS variable so parent layout can adapt
+  useEffect(() => {
+    try {
+      document.documentElement.style.setProperty('--sidebar-width', `${currentWidth}px`);
+    } catch (e) {
+      // ignore in SSR or restricted environments
+    }
+    return () => {
+      try {
+        document.documentElement.style.removeProperty('--sidebar-width');
+      } catch (e) {}
+    };
+  }, [currentWidth]);
 
   // Récupérer le nombre de départements pour afficher un badge
   const { data: departments = [], isLoading: depsLoading } = useQuery({
@@ -193,24 +212,30 @@ const Sidebar: React.FC<SidebarProps> = ({
       flexDirection: 'column',
       background: 'linear-gradient(180deg, #1976d2 0%, #1565c0 100%)',
       color: '#ffffff',
+      width: currentWidth,
+      transition: 'width 220ms ease',
+      overflowY: 'auto',
+      boxSizing: 'border-box',
     }}>
       {/* Header avec logo */}
-      <Toolbar sx={{ px: 2, py: 1.2, minHeight: '64px !important', borderBottom: '2px solid #f9a825' }}>
-        <Box display="flex" alignItems="center" gap={1.5} width="100%">
+      <Toolbar sx={{ px: 2, py: 1.2, minHeight: 'var(--appbar-height, 64px) !important', borderBottom: '2px solid #f9a825' }}>
+        <Box display="flex" alignItems="center" gap={1.5} width="100%" sx={{ justifyContent: collapsed ? 'center' : 'flex-start' }}>
           <Box
             component="img"
             src="/images/logo.png"
             alt="Port Autonome de Lomé"
-            sx={{ height: 30, width: 'auto' }}
+            sx={{ height: collapsed ? 28 : 30, width: 'auto' }}
           />
-          <Box>
-            <Typography variant="body2" fontWeight="700" noWrap sx={{ color: '#ffffff', fontSize: '0.85rem' }}>
-              Port Autonome
-            </Typography>
-            <Typography variant="caption" noWrap sx={{ color: '#fbc02d', fontSize: '0.65rem' }}>
-              Réservation de Salles
-            </Typography>
-          </Box>
+          {!collapsed && (
+            <Box>
+              <Typography variant="body2" fontWeight="700" noWrap sx={{ color: '#ffffff', fontSize: '0.85rem' }}>
+                Port Autonome
+              </Typography>
+              <Typography variant="caption" noWrap sx={{ color: '#fbc02d', fontSize: '0.65rem' }}>
+                Réservation de Salles
+              </Typography>
+            </Box>
+          )}
         </Box>
       </Toolbar>
 
@@ -220,34 +245,38 @@ const Sidebar: React.FC<SidebarProps> = ({
       <List sx={{ flexGrow: 1, px: 1.5, py: 2 }}>
         {userMenuItems.map((item) => (
           <ListItem key={item.text} disablePadding sx={{ mb: 0.5 }}>
-            <ListItemButton
-              onClick={() => handleNavigation(item.path)}
-              selected={isActive(item.path)}
-              sx={{
-                borderRadius: 2,
-                color: 'rgba(255,255,255,0.8)',
-                transition: 'all 0.3s ease',
-                '&.Mui-selected': {
-                  bgcolor: 'rgba(249, 168, 37, 0.25)',
-                  color: '#ffffff',
-                  borderLeft: '3px solid #f9a825',
-                  boxShadow: '0 2px 8px rgba(249, 168, 37, 0.3)',
-                  '& .MuiListItemIcon-root': {
-                    color: '#fbc02d',
+            <Tooltip title={collapsed ? item.text : ''} placement="right">
+              <ListItemButton
+                onClick={() => handleNavigation(item.path)}
+                selected={isActive(item.path)}
+                sx={{
+                  borderRadius: 2,
+                  color: 'rgba(255,255,255,0.8)',
+                  transition: 'all 0.3s ease',
+                  '&.Mui-selected': {
+                    bgcolor: 'rgba(249, 168, 37, 0.25)',
+                    color: '#ffffff',
+                    borderLeft: '3px solid #f9a825',
+                    boxShadow: '0 2px 8px rgba(249, 168, 37, 0.3)',
+                    '& .MuiListItemIcon-root': {
+                      color: '#fbc02d',
+                    },
                   },
-                },
-                '&:hover': {
-                  bgcolor: 'rgba(255,255,255,0.08)',
-                  color: '#ffffff',
-                },
-              }}
-            >
-              <ListItemIcon sx={{ minWidth: 40, color: 'inherit' }}>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.text} primaryTypographyProps={{ fontSize: '0.875rem' }} />
-              {item.badge && (
-                <Chip label={item.badge} size="small" color="error" sx={{ height: 20, fontSize: '0.7rem' }} />
-              )}
-            </ListItemButton>
+                  '&:hover': {
+                    bgcolor: 'rgba(255,255,255,0.08)',
+                    color: '#ffffff',
+                  },
+                  px: collapsed ? 1 : 2,
+                  justifyContent: collapsed ? 'center' : 'flex-start',
+                }}
+              >
+                <ListItemIcon sx={{ minWidth: 48, display: 'flex', justifyContent: 'center', color: 'inherit' }}>{item.icon}</ListItemIcon>
+                {!collapsed && <ListItemText primary={item.text} primaryTypographyProps={{ fontSize: '0.875rem' }} />}
+                {!collapsed && item.badge && (
+                  <Chip label={item.badge} size="small" color="error" sx={{ height: 20, fontSize: '0.7rem' }} />
+                )}
+              </ListItemButton>
+            </Tooltip>
           </ListItem>
         ))}
       </List>
@@ -261,16 +290,18 @@ const Sidebar: React.FC<SidebarProps> = ({
             <ListItem disablePadding>
               <ListItemButton
                 onClick={() => setAdminOpen(!adminOpen)}
-                sx={{ borderRadius: 2, color: 'rgba(255,255,255,0.9)', '&:hover': { bgcolor: 'rgba(255,255,255,0.05)' } }}
+                sx={{ borderRadius: 2, color: 'rgba(255,255,255,0.9)', '&:hover': { bgcolor: 'rgba(255,255,255,0.05)' }, px: collapsed ? 1 : 2, justifyContent: collapsed ? 'center' : 'flex-start' }}
               >
-                <ListItemIcon sx={{ minWidth: 40, color: '#f9a825' }}>
+                <ListItemIcon sx={{ minWidth: 40, color: '#f9a825', display: 'flex', justifyContent: 'center' }}>
                   <AdminIcon />
                 </ListItemIcon>
-                <ListItemText
-                  primary="Administration"
-                  primaryTypographyProps={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: 0.5 }}
-                />
-                {adminOpen ? <ExpandLess sx={{ color: 'rgba(255,255,255,0.7)' }} /> : <ExpandMore sx={{ color: 'rgba(255,255,255,0.7)' }} />}
+                {!collapsed && (
+                  <ListItemText
+                    primary="Administration"
+                    primaryTypographyProps={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: 0.5 }}
+                  />
+                )}
+                {!collapsed && (adminOpen ? <ExpandLess sx={{ color: 'rgba(255,255,255,0.7)' }} /> : <ExpandMore sx={{ color: 'rgba(255,255,255,0.7)' }} />)}
               </ListItemButton>
             </ListItem>
 
@@ -287,13 +318,15 @@ const Sidebar: React.FC<SidebarProps> = ({
                   }
                   return itemsToRender.map((item) => (
                     <ListItem key={item.text} disablePadding sx={{ mb: 0.5 }}>
-                      <ListItemButton onClick={() => handleNavigation(item.path)} selected={isActive(item.path)} sx={{ pl: 3, borderRadius: 2, color: 'rgba(255,255,255,0.8)', '&.Mui-selected': { bgcolor: 'rgba(249, 168, 37, 0.25)', color: '#ffffff', '& .MuiListItemIcon-root': { color: '#f9a825' } }, '&:hover': { bgcolor: 'rgba(255,255,255,0.08)' } }}>
-                        <ListItemIcon sx={{ minWidth: 36, color: 'rgba(255,255,255,0.7)' }}>{item.icon}</ListItemIcon>
-                        <ListItemText primary={item.text} primaryTypographyProps={{ fontSize: '0.8rem' }} />
-                        {item.path === '/admin/departments' && (
-                          <Chip label={depsLoading ? '…' : departmentsCount} size="small" color="secondary" sx={{ ml: 1, height: 22, fontSize: '0.7rem' }} />
-                        )}
-                      </ListItemButton>
+                      <Tooltip title={collapsed ? item.text : ''} placement="right">
+                        <ListItemButton onClick={() => handleNavigation(item.path)} selected={isActive(item.path)} sx={{ pl: collapsed ? 1 : 3, borderRadius: 2, color: 'rgba(255,255,255,0.8)', '&.Mui-selected': { bgcolor: 'rgba(249, 168, 37, 0.25)', color: '#ffffff', '& .MuiListItemIcon-root': { color: '#f9a825' } }, '&:hover': { bgcolor: 'rgba(255,255,255,0.08)' }, justifyContent: collapsed ? 'center' : 'flex-start' }}>
+                          <ListItemIcon sx={{ minWidth: 36, color: 'rgba(255,255,255,0.7)', display: 'flex', justifyContent: 'center' }}>{item.icon}</ListItemIcon>
+                          {!collapsed && <ListItemText primary={item.text} primaryTypographyProps={{ fontSize: '0.8rem' }} />}
+                          {!collapsed && item.path === '/admin/departments' && (
+                            <Chip label={depsLoading ? '…' : departmentsCount} size="small" color="secondary" sx={{ ml: 1, height: 22, fontSize: '0.7rem' }} />
+                          )}
+                        </ListItemButton>
+                      </Tooltip>
                     </ListItem>
                   ));
                 })()}
@@ -304,40 +337,60 @@ const Sidebar: React.FC<SidebarProps> = ({
       )}
 
       {/* Bouton Guide d'utilisation */}
-      <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)', mx: 2 }} />
+      <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
       <Box sx={{ px: 1.5, py: 1 }}>
-        <ListItemButton
-          onClick={() => setGuideOpen(true)}
-          sx={{
-            borderRadius: 2,
-            color: 'rgba(255,255,255,0.9)',
-            bgcolor: 'rgba(249, 168, 37, 0.15)',
-            border: '1px dashed rgba(249, 168, 37, 0.5)',
-            '&:hover': {
-              bgcolor: 'rgba(249, 168, 37, 0.25)',
-              borderColor: '#f9a825',
-            },
-          }}
-        >
-          <ListItemIcon sx={{ minWidth: 40, color: '#f9a825' }}>
-            <HelpIcon />
-          </ListItemIcon>
-          <ListItemText
-            primary="Guide d'utilisation"
-            primaryTypographyProps={{ fontSize: '0.85rem', fontWeight: 600 }}
-          />
-        </ListItemButton>
+        <Tooltip title={collapsed ? 'Guide d\'utilisation' : ''} placement="right">
+          <ListItemButton
+            onClick={() => setGuideOpen(true)}
+            sx={{
+              borderRadius: 2,
+              color: 'rgba(255,255,255,0.9)',
+              bgcolor: 'rgba(249, 168, 37, 0.15)',
+              border: '1px dashed rgba(249, 168, 37, 0.5)',
+              '&:hover': {
+                bgcolor: 'rgba(249, 168, 37, 0.25)',
+                borderColor: '#f9a825',
+              },
+              px: collapsed ? 1 : 2,
+              justifyContent: collapsed ? 'center' : 'flex-start'
+            }}
+          >
+            <ListItemIcon sx={{ minWidth: 40, display: 'flex', justifyContent: 'center', color: '#f9a825' }}>
+              <HelpIcon />
+            </ListItemIcon>
+            {!collapsed && (
+              <ListItemText
+                primary="Guide d'utilisation"
+                primaryTypographyProps={{ fontSize: '0.85rem', fontWeight: 600 }}
+              />
+            )}
+          </ListItemButton>
+        </Tooltip>
+      </Box>
+
+      {/* Collapse toggle */}
+      <Box sx={{ px: 1.5, py: 1, display: 'flex', justifyContent: 'center' }}>
+        <Tooltip title={collapsed ? 'Agrandir' : 'Réduire'} placement="right">
+          <ListItemButton onClick={() => setCollapsed(s => !s)} sx={{ borderRadius: 2, justifyContent: 'center', color: 'rgba(255,255,255,0.9)', px: 1.25 }}>
+            <ListItemIcon sx={{ minWidth: 36, color: 'rgba(255,255,255,0.9)', justifyContent: 'center' }}>
+              {collapsed ? <ChevronRight sx={{ color: '#fff' }} /> : <ChevronLeft sx={{ color: '#fff' }} />}
+            </ListItemIcon>
+            {!collapsed && <ListItemText primary="Réduire" primaryTypographyProps={{ fontSize: '0.85rem', fontWeight: 600 }} />}
+          </ListItemButton>
+        </Tooltip>
       </Box>
 
       {/* Footer avec info utilisateur */}
       <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
       <Box sx={{ p: 2 }}>
-        <Box display="flex" alignItems="center" gap={1.5} sx={{ p: 1.5, bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 2, backdropFilter: 'blur(10px)' }}>
+        <Box display="flex" alignItems="center" gap={1.5} sx={{ p: 1.25, bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 2, backdropFilter: 'blur(10px)', justifyContent: collapsed ? 'center' : 'flex-start' }}>
           <Avatar sx={{ width: 36, height: 36, bgcolor: '#f9a825', color: '#000000', fontSize: '0.875rem', fontWeight: 700, border: '2px solid #fbc02d', boxShadow: '0 2px 8px rgba(249, 168, 37, 0.4)' }}>{initials}</Avatar>
-          <Box sx={{ overflow: 'hidden' }}>
-            <Typography variant="body2" fontWeight="600" noWrap sx={{ color: '#ffffff' }}>{fullName}</Typography>
-            <Typography variant="caption" noWrap sx={{ color: 'rgba(255,255,255,0.7)' }}>{roleLabel}</Typography>
-          </Box>
+          {!collapsed && (
+            <Box sx={{ overflow: 'hidden' }}>
+              <Typography variant="body2" fontWeight="600" noWrap sx={{ color: '#ffffff' }}>{fullName}</Typography>
+              <Typography variant="caption" noWrap sx={{ color: 'rgba(255,255,255,0.7)' }}>{roleLabel}</Typography>
+            </Box>
+          )}
         </Box>
       </Box>
 
@@ -347,7 +400,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   );
 
   return (
-    <Box component="nav" sx={{ width: { md: width }, flexShrink: { md: 0 } }}>
+    <Box component="nav" sx={{ width: { md: `var(--sidebar-width, ${width}px)` }, flexShrink: { md: 0 } }}>
       {/* Mobile drawer */}
       <Drawer
         variant="temporary"
@@ -356,13 +409,17 @@ const Sidebar: React.FC<SidebarProps> = ({
         ModalProps={{ keepMounted: true }}
         sx={{
           display: { xs: 'block', md: 'none' },
-          '& .MuiDrawer-paper': {
+            '& .MuiDrawer-paper': {
             boxSizing: 'border-box',
-            width: width,
+            width: `${currentWidth}px`,
             borderRight: 'none',
             boxShadow: 3,
             background: 'linear-gradient(180deg, #1976d2 0%, #1565c0 100%)',
             color: '#ffffff',
+              top: '0',
+              height: '100%',
+            transition: 'width 220ms ease',
+            overflow: 'auto',
           },
         }}
       >
@@ -376,11 +433,15 @@ const Sidebar: React.FC<SidebarProps> = ({
           display: { xs: 'none', md: 'block' },
           '& .MuiDrawer-paper': {
             boxSizing: 'border-box',
-            width: width,
+            width: `${currentWidth}px`,
+            top: '0',
+            height: '100%',
             borderRight: '1px solid',
             borderColor: 'divider',
             background: 'linear-gradient(180deg, #1976d2 0%, #1565c0 100%)',
             color: '#ffffff',
+            transition: 'width 220ms ease',
+            overflow: 'auto',
           },
         }}
         open
