@@ -429,3 +429,6 @@ En cas de problème en production :
 **Dernière mise à jour**: 5 décembre 2025  
 **Version**: 1.0.0  
 **Contact**: support@votre-domaine.com
+
+
+IZzOWLYC1FBt5XuO

@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient, type UseMutationResult, type UseQueryResult } from '@tanstack/react-query';
+import { useState } from 'react';
 import { usersAPI } from '@/api/users';
 import { useAuthStore } from '@/store/authStore';
 import toast from 'react-hot-toast';
@@ -36,6 +37,9 @@ export interface UserStats {
 
 export interface UseUsersOptions {
   fetchAll?: boolean;
+  page?: number;
+  perPage?: number;
+  search?: string;
 }
 
 export interface UseUsersReturn {
@@ -74,23 +78,23 @@ export const useUsers = (options: UseUsersOptions = {}): UseUsersReturn => {
   const currentUser = useAuthStore((state) => state.user);
   const isAdmin = currentUser?.role === 'admin';
 
-  // Récupérer tous les utilisateurs (admin only)
+  // Pagination et recherche pilotées par le composant parent
+  const page = options.page ?? 0;
+  const perPage = options.perPage ?? 10;
+  const search = options.search ?? '';
+
   const {
     data: usersData,
     isLoading: isLoadingUsers,
     error: usersError,
     refetch: refetchUsers,
   } = useQuery({
-    queryKey: ['users'],
-    queryFn: usersAPI.getAll,
+    queryKey: ['users', page, perPage, search],
+    queryFn: () => usersAPI.getAll({ page, perPage, search }),
     enabled: isAdmin && options.fetchAll !== false,
     staleTime: 0,
     refetchOnMount: true,
     refetchOnWindowFocus: true,
-    select: (data): User[] => {
-      if (Array.isArray(data)) return data;
-      return (data as any).utilisateurs || (data as any).data || [];
-    },
   });
 
   // Récupérer un utilisateur par ID
@@ -133,7 +137,7 @@ export const useUsers = (options: UseUsersOptions = {}): UseUsersReturn => {
 
   // Activer/Désactiver un utilisateur (admin)
   const toggleUserStatus = useMutation({
-    mutationFn: ({ id, actif }: ToggleStatusParams) => usersAPI.update(id, { actif } as Partial<UserFormData>),
+    mutationFn: ({ id, actif }: ToggleStatusParams) => usersAPI.toggleActive(id, actif),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       toast.success(variables.actif ? 'Utilisateur activé' : 'Utilisateur désactivé');
@@ -221,7 +225,18 @@ export const useUsers = (options: UseUsersOptions = {}): UseUsersReturn => {
     
     // Mutations (admin)
     updateUser,
-    deleteUser: { isPending: false, mutate: () => toast.error("Suppression non implémentée") },
+    deleteUser: useMutation({
+      mutationFn: async (userId: number) => {
+        return await usersAPI.delete(userId);
+      },
+      onSuccess: () => {
+        toast.success("Utilisateur supprimé avec succès");
+        queryClient.invalidateQueries(['users']);
+      },
+      onError: () => {
+        toast.error("Erreur lors de la suppression");
+      }
+    }),
     changeUserRole,
     toggleUserStatus,
     

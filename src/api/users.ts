@@ -1,5 +1,8 @@
+
 import apiClient from './client';
 import type { User, UserFormData, ApiResponse } from '@/types';
+// Désactiver ou réactiver un utilisateur (admin)
+// (doit être dans l'objet usersAPI plus bas)
 
 interface GetUsersResponse {
   utilisateurs?: User[];
@@ -13,15 +16,25 @@ interface PasswordChangeData {
 }
 
 export const usersAPI = {
+    // Désactiver ou réactiver un utilisateur (admin)
+    toggleActive: async (id: number, actif: boolean): Promise<ApiResponse<{ success: boolean; id: number; actif: boolean }>> => {
+      const response = await apiClient.put(`/users/${id}/actif`, { actif });
+      return response.data;
+    },
   // Récupérer tous les utilisateurs (admin)
-  getAll: async (): Promise<User[]> => {
-    const response = await apiClient.get<GetUsersResponse | User[]>('/users/registry');
-    // L'API retourne { utilisateurs: [...], total, count, ... } - on extrait le tableau
-    const data = response.data;
-    if (Array.isArray(data)) {
-      return data;
-    }
-    return data.utilisateurs ?? [];
+  getAll: async (params?: { page?: number; perPage?: number; search?: string }): Promise<{ utilisateurs: User[]; total: number; count: number; offset: number; limit: number }> => {
+    // Calculer offset et limit
+    const page = params?.page ?? 0;
+    const perPage = params?.perPage ?? 10;
+    const offset = page * perPage;
+    const queryParams: any = {
+      limit: perPage,
+      offset,
+    };
+    if (params?.search) queryParams.nom = params.search;
+    const response = await apiClient.get('/users/registry', { params: queryParams });
+    // L'API retourne { utilisateurs, total, count, offset, limit }
+    return response.data;
   },
 
   // Récupérer un utilisateur par ID
@@ -40,10 +53,10 @@ export const usersAPI = {
     return response.data;
   },
 
-  // Supprimer un utilisateur (admin) - route non disponible dans ce backend
-  delete: async (): Promise<never> => {
-    // Le backend n'a pas de route delete user
-    throw new Error('Suppression utilisateur non disponible');
+  // Supprimer un utilisateur (admin)
+  delete: async (id: number): Promise<ApiResponse<{ success: boolean; deletedId: number }>> => {
+    const response = await apiClient.delete<ApiResponse<{ success: boolean; deletedId: number }>>(`/users/${id}`);
+    return response.data;
   },
 
   // Mettre à jour mon profil

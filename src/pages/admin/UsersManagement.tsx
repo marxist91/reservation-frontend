@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useUsers } from '@/hooks/useUsers';
 import { authAPI } from '@/api/auth';
@@ -35,6 +35,8 @@ import {
   Delete as DeleteIcon,
   Search as SearchIcon,
   PersonAdd as PersonAddIcon,
+  Block as BlockIcon,
+  CheckCircle as CheckCircleIcon,
 } from '@mui/icons-material';
 
 interface UserFormData {
@@ -53,8 +55,24 @@ const UsersManagement: React.FC = () => {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchInput, setSearchInput] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+
+  // Pagination et recherche backend
+  const { users: usersData, isLoading, error, updateUser, deleteUser, toggleUserStatus } = useUsers({
+    page,
+    perPage: rowsPerPage,
+    search: searchTerm,
+  });
+
+  // Déclenche la recherche uniquement sur Entrée ou clic
+  const triggerSearch = () => {
+    setSearchTerm(searchInput);
+    setPage(0);
+  };
+  const utilisateurs = usersData?.utilisateurs ?? [];
+  const total = usersData?.total ?? 0;
   const [formData, setFormData] = useState<UserFormData>({
     nom: '',
     prenom: '',
@@ -63,19 +81,7 @@ const UsersManagement: React.FC = () => {
     role: 'user',
   });
 
-  const { 
-    users: rawUsers, 
-    isLoading, 
-    error, 
-    updateUser, 
-    deleteUser,
-  } = useUsers();
-
-  const users = Array.isArray(rawUsers) ? rawUsers : [];
-
-  if (error) {
-    console.error('❌ Error loading users:', error);
-  }
+  // (Supprimé : double déclaration de isLoading, error, updateUser, deleteUser)
 
   const createMutation = useMutation({
     mutationFn: authAPI.register,
@@ -154,7 +160,12 @@ const UsersManagement: React.FC = () => {
 
   const confirmDelete = (): void => {
     if (selectedUser) {
-      deleteUser.mutate();
+      deleteUser.mutate(selectedUser.id, {
+        onSuccess: () => {
+          setOpenDeleteDialog(false);
+          setSelectedUser(null);
+        }
+      });
     }
   };
 
@@ -176,12 +187,6 @@ const UsersManagement: React.FC = () => {
     }
   };
 
-  const filteredUsers = users.filter((user) =>
-    `${user.nom} ${user.prenom} ${user.email}`
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase())
-  );
-
   const handleChangePage = (_event: unknown, newPage: number): void => {
     setPage(newPage);
   };
@@ -191,10 +196,15 @@ const UsersManagement: React.FC = () => {
     setPage(0);
   };
 
-  const paginatedUsers = filteredUsers.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage
-  );
+  const handleSearchInput = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    setSearchInput(e.target.value);
+  };
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      triggerSearch();
+    }
+  };
 
   if (isLoading) {
     return (
@@ -229,12 +239,15 @@ const UsersManagement: React.FC = () => {
         <TextField
           fullWidth
           placeholder="Rechercher un utilisateur..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          value={searchInput}
+          onChange={handleSearchInput}
+          onKeyDown={handleSearchKeyDown}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <SearchIcon />
+                <IconButton onClick={triggerSearch} edge="start" tabIndex={-1} aria-label="Rechercher">
+                  <SearchIcon />
+                </IconButton>
               </InputAdornment>
             ),
           }}
@@ -255,14 +268,14 @@ const UsersManagement: React.FC = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredUsers.length === 0 ? (
+            {utilisateurs.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} align="center">
                   Aucun utilisateur trouvé
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedUsers.map((user) => (
+              utilisateurs.map((user) => (
                 <TableRow key={user.id} hover>
                   <TableCell>{user.id}</TableCell>
                   <TableCell>{user.nom}</TableCell>
@@ -287,6 +300,17 @@ const UsersManagement: React.FC = () => {
                         <EditIcon />
                       </IconButton>
                     </Tooltip>
+                    <Tooltip title={user.actif ? 'Désactiver' : 'Réactiver'}>
+                      <span>
+                        <IconButton
+                          color={user.actif ? 'warning' : 'success'}
+                          onClick={() => toggleUserStatus.mutate({ id: user.id, actif: !user.actif })}
+                          disabled={toggleUserStatus.isPending}
+                        >
+                          {user.actif ? <BlockIcon /> : <CheckCircleIcon />}
+                        </IconButton>
+                      </span>
+                    </Tooltip>
                     <Tooltip title="Supprimer">
                       <IconButton
                         color="error"
@@ -304,7 +328,7 @@ const UsersManagement: React.FC = () => {
         <TablePagination
           rowsPerPageOptions={[5, 10, 25, 50]}
           component="div"
-          count={filteredUsers.length}
+          count={total}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}
