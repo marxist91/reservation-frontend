@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useUsers } from '@/hooks/useUsers';
 import { authAPI } from '@/api/auth';
@@ -60,7 +60,7 @@ const UsersManagement: React.FC = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
   // Pagination et recherche backend
-  const { users: usersData, isLoading, error, updateUser, deleteUser, toggleUserStatus } = useUsers({
+  const { users, isLoading, error, updateUser, deleteUser, toggleUserStatus } = useUsers({
     page,
     perPage: rowsPerPage,
     search: searchTerm,
@@ -71,8 +71,8 @@ const UsersManagement: React.FC = () => {
     setSearchTerm(searchInput);
     setPage(0);
   };
-  const utilisateurs = usersData?.utilisateurs ?? [];
-  const total = usersData?.total ?? 0;
+  const utilisateurs = users;
+  const total = users.length;
   const [formData, setFormData] = useState<UserFormData>({
     nom: '',
     prenom: '',
@@ -160,12 +160,9 @@ const UsersManagement: React.FC = () => {
 
   const confirmDelete = (): void => {
     if (selectedUser) {
-      deleteUser.mutate(selectedUser.id, {
-        onSuccess: () => {
-          setOpenDeleteDialog(false);
-          setSelectedUser(null);
-        }
-      });
+      deleteUser.mutate(selectedUser.id);
+      setOpenDeleteDialog(false);
+      setSelectedUser(null);
     }
   };
 
@@ -275,7 +272,7 @@ const UsersManagement: React.FC = () => {
                 </TableCell>
               </TableRow>
             ) : (
-              utilisateurs.map((user) => (
+              utilisateurs.map((user: User) => (
                 <TableRow key={user.id} hover>
                   <TableCell>{user.id}</TableCell>
                   <TableCell>{user.nom}</TableCell>

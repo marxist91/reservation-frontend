@@ -129,28 +129,20 @@ const Statistics: React.FC = () => {
 
   // Récupération des données
 
+
   const { data: roomsData, isLoading: roomsLoading } = useQuery<Room[]>({
     queryKey: ['rooms'],
     queryFn: roomsAPI.getAll,
   });
+  const rooms: Room[] = Array.isArray(roomsData) ? roomsData : [];
 
-  const { data: usersData, isLoading: usersLoading } = useQuery<any>({
+  const { data: users = [], isLoading: usersLoading } = useQuery<User[]>({
     queryKey: ['users'],
-    queryFn: usersAPI.getAll,
-    select: (data) => Array.isArray(data) ? data : (data.utilisateurs || []),
+    queryFn: async () => {
+      const data = await usersAPI.getAll();
+      return Array.isArray(data.utilisateurs) ? data.utilisateurs : [];
+    },
   });
-
-  // reservations list is available via reservationsData if needed; no local computation required
-
-  const rooms: Room[] = useMemo(() => 
-    Array.isArray(roomsData) ? roomsData : [],
-    [roomsData]
-  );
-
-  const users: User[] = useMemo(() => 
-    Array.isArray(usersData) ? usersData : [],
-    [usersData]
-  );
 
   
 

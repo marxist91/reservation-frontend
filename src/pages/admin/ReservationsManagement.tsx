@@ -104,10 +104,12 @@ const ReservationsManagement: React.FC = () => {
   });
 
   // Récupérer les utilisateurs
-  const { data: users = [] } = useQuery<any>({
+  const { data: users = [] } = useQuery<User[]>({
     queryKey: ['users'],
-    queryFn: usersAPI.getAll,
-    select: (data) => Array.isArray(data) ? data : (data.utilisateurs || []),
+    queryFn: async () => {
+      const data = await usersAPI.getAll();
+      return Array.isArray(data.utilisateurs) ? data.utilisateurs : [];
+    },
   });
 
   // Récupérer les départements (fallback si la réservation ne contient pas l'objet department)

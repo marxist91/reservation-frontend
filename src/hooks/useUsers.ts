@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient, type UseMutationResult, type UseQueryResult } from '@tanstack/react-query';
-import { useState } from 'react';
+
 import { usersAPI } from '@/api/users';
 import { useAuthStore } from '@/store/authStore';
 import toast from 'react-hot-toast';
@@ -47,21 +47,21 @@ export interface UseUsersReturn {
   users: User[];
   isLoading: boolean;
   error: Error | null;
-  
+
   // Queries
   useUserById: (userId: number | null) => UseQueryResult<User, Error>;
   refetchUsers: () => void;
-  
+
   // Mutations (admin)
   updateUser: UseMutationResult<any, Error, UpdateUserParams, unknown>;
-  deleteUser: { isPending: boolean; mutate: () => void };
+  deleteUser: UseMutationResult<any, Error, number, unknown>;
   changeUserRole: UseMutationResult<any, Error, ChangeRoleParams, unknown>;
   toggleUserStatus: UseMutationResult<any, Error, ToggleStatusParams, unknown>;
-  
+
   // Mutations (self)
   updateProfile: UseMutationResult<any, Error, Partial<UserFormData>, unknown>;
   changePassword: UseMutationResult<any, Error, PasswordChangeData, unknown>;
-  
+
   // Helpers
   getUserStats: () => UserStats | null;
   filterUsers: (filters?: UserFilters) => User[];
@@ -174,48 +174,42 @@ export const useUsers = (options: UseUsersOptions = {}): UseUsersReturn => {
 
   // Stats utilisateurs (admin)
   const getUserStats = (): UserStats | null => {
-    if (!usersData) return null;
-    
-    const users = usersData;
+    if (!usersData || !Array.isArray(usersData.utilisateurs)) return null;
+    const users = usersData.utilisateurs;
     return {
       total: users.length,
-      admins: users.filter(u => u.role === 'admin').length,
-      responsables: users.filter(u => u.role === 'responsable').length,
-      users: users.filter(u => u.role === 'user').length,
-      actifs: users.filter(u => u.actif !== false).length,
-      inactifs: users.filter(u => u.actif === false).length,
+      admins: users.filter((u: User) => u.role === 'admin').length,
+      responsables: users.filter((u: User) => u.role === 'responsable').length,
+      users: users.filter((u: User) => u.role === 'user').length,
+      actifs: users.filter((u: User) => u.actif !== false).length,
+      inactifs: users.filter((u: User) => u.actif === false).length,
     };
   };
 
   // Filtrer les utilisateurs
   const filterUsers = (filters: UserFilters = {}): User[] => {
-    if (!usersData) return [];
-    
-    let filtered = [...usersData];
-    
+    if (!usersData || !Array.isArray(usersData.utilisateurs)) return [];
+    let filtered = [...usersData.utilisateurs];
     if (filters.role) {
-      filtered = filtered.filter(u => u.role === filters.role);
+      filtered = filtered.filter((u: User) => u.role === filters.role);
     }
-    
     if (filters.search) {
       const search = filters.search.toLowerCase();
-      filtered = filtered.filter(u => 
+      filtered = filtered.filter((u: User) =>
         u.nom?.toLowerCase().includes(search) ||
         u.prenom?.toLowerCase().includes(search) ||
         u.email?.toLowerCase().includes(search)
       );
     }
-    
     if (filters.actif !== undefined) {
-      filtered = filtered.filter(u => u.actif === filters.actif);
+      filtered = filtered.filter((u: User) => u.actif === filters.actif);
     }
-    
     return filtered;
   };
 
   return {
     // Data
-    users: usersData || [],
+    users: usersData?.utilisateurs || [],
     isLoading: isLoadingUsers,
     error: usersError,
     
@@ -231,7 +225,7 @@ export const useUsers = (options: UseUsersOptions = {}): UseUsersReturn => {
       },
       onSuccess: () => {
         toast.success("Utilisateur supprimé avec succès");
-        queryClient.invalidateQueries(['users']);
+        queryClient.invalidateQueries({ queryKey: ['users'] });
       },
       onError: () => {
         toast.error("Erreur lors de la suppression");

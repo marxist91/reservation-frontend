@@ -4,7 +4,7 @@ import apiClient from '@/api/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { departmentsAPI } from '@/api/departments';
 import toast from 'react-hot-toast';
-import type { Department } from '@/types';
+import type { Department, User } from '@/types';
 import {
   Box,
   Typography,
@@ -49,10 +49,11 @@ const Departments: React.FC = () => {
   const [slug, setSlug] = useState('');
   const [responsableId, setResponsableId] = useState<number | null>(null);
 
-  const { data: users = [] } = useQuery({
+  const { data: usersData } = useQuery({
     queryKey: ['users'],
     queryFn: async () => usersAPI.getAll(),
   });
+  const users: User[] = Array.isArray(usersData?.utilisateurs) ? usersData.utilisateurs : [];
 
   const { data: meta } = useQuery({
     queryKey: ['meta'],
@@ -221,7 +222,11 @@ const Departments: React.FC = () => {
                     </Box>
                   </TableCell>
                       <TableCell>
-                        {dep.responsable ? `${dep.responsable.prenom} ${dep.responsable.nom}` : (users.find(u => u.id === dep.responsable_id) ? `${users.find(u => u.id === dep.responsable_id)?.prenom} ${users.find(u => u.id === dep.responsable_id)?.nom}` : '-')}
+                        {dep.responsable ? `${dep.responsable.prenom} ${dep.responsable.nom}` : (() => {
+                          if (!Array.isArray(users)) return '-';
+                          const responsable = users.find((u: User) => u.id === dep.responsable_id);
+                          return responsable ? `${responsable.prenom} ${responsable.nom}` : '-';
+                        })()}
                       </TableCell>
                   <TableCell>{formatDate(dep.created_at ?? (dep as any).createdAt)}</TableCell>
                   <TableCell align="center">
@@ -251,7 +256,11 @@ const Departments: React.FC = () => {
                   <Box sx={{ fontWeight: 700, fontSize: '1.05rem' }}>{dep.name}</Box>
                   {dep.description && <Box sx={{ mt: 1, color: 'text.secondary' }}>{dep.description}</Box>}
                   <Box sx={{ mt: 2, color: 'text.secondary' }}>
-                    <strong>Responsable:</strong> {dep.responsable ? `${dep.responsable.prenom} ${dep.responsable.nom}` : (users.find(u => u.id === dep.responsable_id) ? `${users.find(u => u.id === dep.responsable_id)?.prenom} ${users.find(u => u.id === dep.responsable_id)?.nom}` : '-')}
+                     <strong>Responsable:</strong> {dep.responsable ? `${dep.responsable.prenom} ${dep.responsable.nom}` : (() => {
+                       if (!Array.isArray(users)) return '-';
+                       const responsable = users.find((u: User) => u.id === dep.responsable_id);
+                       return responsable ? `${responsable.prenom} ${responsable.nom}` : '-';
+                     })()}
                   </Box>
                   <Box sx={{ mt: 1, color: 'text.secondary' }}>Créé le: {formatDate(dep.created_at ?? (dep as any).createdAt)}</Box>
                 </CardContent>
@@ -307,8 +316,8 @@ const Departments: React.FC = () => {
             >
               <MenuItem value="">(Aucun)</MenuItem>
               {users
-                .filter(u => u.role === 'responsable')
-                .map(u => (
+                 .filter((u: User) => u.role === 'responsable')
+                 .map((u: User) => (
                   <MenuItem key={u.id} value={u.id} disabled={u.actif === false}>{u.prenom} {u.nom}{u.actif === false ? ' (inactif)' : ''}</MenuItem>
                 ))}
             </TextField>
