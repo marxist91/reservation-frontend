@@ -45,6 +45,7 @@ export interface UseUsersOptions {
 export interface UseUsersReturn {
   // Data
   users: User[];
+  total: number;
   isLoading: boolean;
   error: Error | null;
 
@@ -210,6 +211,7 @@ export const useUsers = (options: UseUsersOptions = {}): UseUsersReturn => {
   return {
     // Data
     users: usersData?.utilisateurs || [],
+    total: usersData?.total ?? 0,
     isLoading: isLoadingUsers,
     error: usersError,
     

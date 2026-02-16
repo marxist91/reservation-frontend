@@ -60,7 +60,7 @@ const UsersManagement: React.FC = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
   // Pagination et recherche backend
-  const { users, isLoading, error, updateUser, deleteUser, toggleUserStatus } = useUsers({
+  const { users, total, isLoading, error, updateUser, deleteUser, toggleUserStatus } = useUsers({
     page,
     perPage: rowsPerPage,
     search: searchTerm,
@@ -72,7 +72,6 @@ const UsersManagement: React.FC = () => {
     setPage(0);
   };
   const utilisateurs = users;
-  const total = users.length;
   const [formData, setFormData] = useState<UserFormData>({
     nom: '',
     prenom: '',
