@@ -78,11 +78,11 @@ const AdminDashboard: React.FC = () => {
   });
   
   const isAdmin = user?.role === 'admin';
-  const { data: users, isLoading: usersLoading } = useQuery<User[]>({
+  const { data: users, isLoading: usersLoading } = useQuery<{ utilisateurs: User[]; total: number }>({
     queryKey: ['users'],
     queryFn: async () => {
-      const data = await usersAPI.getAll() as any;
-      return Array.isArray(data) ? data : (data.utilisateurs || []);
+      const data = await usersAPI.getAll();
+      return data as { utilisateurs: User[]; total: number };
     },
     enabled: isAdmin,
   });
@@ -95,7 +95,7 @@ const AdminDashboard: React.FC = () => {
   if (isAdmin) {
     stats.push({
       title: 'Utilisateurs',
-      value: users?.length || 0,
+      value: users?.total || 0,
       icon: <PeopleIcon sx={{ fontSize: 40 }} />,
       color: '#1976d2',
       onClick: () => navigate('/admin/users'),
@@ -302,7 +302,7 @@ const AdminDashboard: React.FC = () => {
               <Typography variant="h6" gutterBottom>
                 Derniers Utilisateurs
               </Typography>
-              {users?.slice(0, 5).map((u) => (
+              {users?.utilisateurs?.slice(0, 5).map((u: User) => (
                 <Box key={u.id} display="flex" justifyContent="space-between" alignItems="center" py={1} borderBottom="1px solid #eee">
                   <Box>
                     <Typography variant="subtitle2">{u.prenom} {u.nom}</Typography>

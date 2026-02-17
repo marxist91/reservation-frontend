@@ -33,6 +33,19 @@ import {
 type ActionColor = 'info' | 'success' | 'error' | 'warning' | 'default';
 
 const AdminHistory: React.FC = () => {
+    // Suppression backend
+    const [deleting, setDeleting] = useState(false);
+    const handleClearBackend = async () => {
+      setDeleting(true);
+      try {
+        await fetch('/admin/history/clear', { method: 'DELETE' });
+        await fetchHistory();
+      } catch (e) {
+        // silent
+      } finally {
+        setDeleting(false);
+      }
+    };
   const currentUser = useAuthStore((state) => state.user);
   const isAdmin = currentUser?.role === 'admin';
   
@@ -166,6 +179,21 @@ const AdminHistory: React.FC = () => {
             onClick={resetFilters}
           >
             Réinitialiser
+          </Button>
+          <Button
+            variant="outlined"
+            color="error"
+            onClick={() => useHistoryStore.getState().clearHistory()}
+          >
+            Supprimer tout l’historique (local)
+          </Button>
+          <Button
+            variant="contained"
+            color="error"
+            disabled={deleting}
+            onClick={handleClearBackend}
+          >
+            Supprimer tout l’historique (backend)
           </Button>
         </Box>
       </Box>
