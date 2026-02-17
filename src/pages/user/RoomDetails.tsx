@@ -113,13 +113,25 @@ const RoomDetails: React.FC = () => {
 
   const handleReservation = (formData: any): void => {
     if (!room) return;
+    // Prend le premier créneau horaire du tableau timeSlots
+    const firstSlot = Array.isArray(formData.timeSlots) && formData.timeSlots.length > 0 ? formData.timeSlots[0] : null;
+    if (!firstSlot || !firstSlot.heure_debut || !firstSlot.heure_fin) {
+      alert("Veuillez sélectionner un créneau horaire valide.");
+      return;
+    }
+    // Correction : toujours inclure le champ date (YYYY-MM-DD)
+    const date = formData.date || (formData.date_debut ?? formData.date_debut) || null;
+    if (!date) {
+      alert("Veuillez sélectionner une date valide.");
+      return;
+    }
     const reservationData: ReservationFormData = {
       room_id: room.id,
-      date: formData.date,
-      heure_debut: formData.heure_debut,
-      heure_fin: formData.heure_fin,
+      date,
+      heure_debut: firstSlot.heure_debut,
+      heure_fin: firstSlot.heure_fin,
       motif: formData.motif,
-      nombre_participants: formData.nombre_participants,
+      nombre_participants: formData.nombre_participants ?? 1,
     };
     createReservation.mutate(reservationData, {
       onSuccess: () => {
