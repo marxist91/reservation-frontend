@@ -61,7 +61,7 @@ import Stack from '@mui/material/Stack';
 import { statsAPI } from '@/api/stats';
 import { roomsAPI } from '@/api/rooms';
 import { usersAPI } from '@/api/users';
-import type { Room, User } from '@/types';
+import type { Room } from '@/types';
 import { format, startOfMonth, subMonths, parseISO, endOfMonth } from 'date-fns';
 import WeeklyReport from '@/components/admin/WeeklyReport';
 import { DatePicker } from '@mui/x-date-pickers';
@@ -136,13 +136,16 @@ const Statistics: React.FC = () => {
   });
   const rooms: Room[] = Array.isArray(roomsData) ? roomsData : [];
 
-  const { data: users = [], isLoading: usersLoading } = useQuery<User[]>({
-    queryKey: ['users'],
-    queryFn: async () => {
-      const data = await usersAPI.getAll();
-      return Array.isArray(data.utilisateurs) ? data.utilisateurs : [];
-    },
+  // Récupérer tous les utilisateurs (pour le vrai total)
+  const { data: usersData, isLoading: usersLoading } = useQuery({
+    queryKey: ['users', 0, 10000, ''],
+    queryFn: () => usersAPI.getAll({ page: 0, perPage: 10000 }),
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
+  const users = usersData?.utilisateurs || [];
+  const totalUsers = usersData?.total ?? users.length;
 
   
 
@@ -457,7 +460,7 @@ const Statistics: React.FC = () => {
                 </Avatar>
                 <Box>
                   <Typography variant="h5" fontWeight={700}>
-                    {users.length}
+                    {totalUsers}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     Utilisateurs actifs
