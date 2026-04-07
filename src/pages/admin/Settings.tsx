@@ -14,6 +14,12 @@ import {
   CardContent,
   Alert,
   Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  CircularProgress,
 } from '@mui/material';
 import {
   Settings as SettingsIcon,
@@ -25,6 +31,7 @@ import {
   Save as SaveIcon,
   Refresh as RefreshIcon,
   Repeat as RepeatIcon,
+  DeleteForever as DeleteForeverIcon,
 } from '@mui/icons-material';
 import RecurringMeetingsManager from '../../components/admin/RecurringMeetingsManager';
 import toast from 'react-hot-toast';
@@ -55,6 +62,9 @@ function TabPanel(props: TabPanelProps) {
 const Settings: React.FC = () => {
   const [tabValue, setTabValue] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [clearDialogOpen, setClearDialogOpen] = useState(false);
+  const [clearLoading, setClearLoading] = useState(false);
+  const [confirmText, setConfirmText] = useState('');
 
   // États pour les paramètres généraux
   const [appName, setAppName] = useState('Système de Réservation de Salles');
@@ -178,6 +188,22 @@ const Settings: React.FC = () => {
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
+  };
+
+  const handleClearAllReservations = async () => {
+    if (confirmText !== 'SUPPRIMER') return;
+    setClearLoading(true);
+    try {
+      const result = await settingsAPI.clearAllReservations();
+      toast.success(result.message);
+      setClearDialogOpen(false);
+      setConfirmText('');
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+      toast.error('Erreur lors de la suppression des réservations');
+    } finally {
+      setClearLoading(false);
+    }
   };
 
   const handleSaveGeneralSettings = async () => {
@@ -418,7 +444,68 @@ const Settings: React.FC = () => {
                 </Button>
               </Box>
             </Grid>
+
+            {/* Zone de danger */}
+            <Grid size={{ xs: 12 }}>
+              <Card sx={{ border: '2px solid', borderColor: 'error.main', mt: 2 }}>
+                <CardContent>
+                  <Typography variant="h6" color="error" gutterBottom>
+                    Zone de danger
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    Cette action est irréversible. Seules les réservations <strong>passées</strong> seront supprimées.
+                    Les réservations futures et les réunions récurrentes seront conservées.
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    color="error"
+                    startIcon={<DeleteForeverIcon />}
+                    onClick={() => setClearDialogOpen(true)}
+                  >
+                    Vider les réservations passées
+                  </Button>
+                </CardContent>
+              </Card>
+            </Grid>
           </Grid>
+
+          {/* Dialog de confirmation */}
+          <Dialog open={clearDialogOpen} onClose={() => { setClearDialogOpen(false); setConfirmText(''); }}>
+            <DialogTitle sx={{ color: 'error.main' }}>⚠️ Confirmer la suppression</DialogTitle>
+            <DialogContent>
+              <DialogContentText sx={{ mb: 2 }}>
+                Vous êtes sur le point de supprimer toutes les réservations <strong>passées</strong> de la base de données.
+                Les réservations futures et récurrentes ne seront <strong>pas affectées</strong>.
+                Cette action est <strong>irréversible</strong>.
+              </DialogContentText>
+              <DialogContentText sx={{ mb: 2 }}>
+                Tapez <strong>SUPPRIMER</strong> pour confirmer :
+              </DialogContentText>
+              <TextField
+                autoFocus
+                fullWidth
+                value={confirmText}
+                onChange={(e) => setConfirmText(e.target.value)}
+                placeholder="SUPPRIMER"
+                variant="outlined"
+                size="small"
+              />
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => { setClearDialogOpen(false); setConfirmText(''); }}>
+                Annuler
+              </Button>
+              <Button
+                onClick={handleClearAllReservations}
+                color="error"
+                variant="contained"
+                disabled={confirmText !== 'SUPPRIMER' || clearLoading}
+                startIcon={clearLoading ? <CircularProgress size={20} /> : <DeleteForeverIcon />}
+              >
+                {clearLoading ? 'Suppression...' : 'Tout supprimer'}
+              </Button>
+            </DialogActions>
+          </Dialog>
         </TabPanel>
 
         {/* Onglet Notifications */}

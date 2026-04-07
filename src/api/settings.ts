@@ -59,4 +59,10 @@ export const settingsAPI = {
     const response = await apiClient.put<{ message: string; settings: SettingsData }>('/settings', settings);
     return response.data;
   },
+
+  // Vider toutes les réservations
+  clearAllReservations: async (): Promise<{ message: string; deleted: number; notificationsDeleted: number }> => {
+    const response = await apiClient.delete<{ message: string; deleted: number; notificationsDeleted: number }>('/settings/clear-all-reservations');
+    return response.data;
+  },
 };
