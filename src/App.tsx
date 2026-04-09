@@ -5,6 +5,9 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { useMemo, useEffect } from 'react';
+import { useThemeStore } from './store/themeStore';
+import { settingsAPI } from './api/settings';
 
 // Pages Auth
 import Login from './pages/auth/Login';
@@ -56,150 +59,145 @@ const queryClient = new QueryClient({
   },
 });
 
-// Thème Material-UI - Port Autonome de Lomé
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#1976d2',
-      light: '#63a4ff',
-      dark: '#004ba0',
-      contrastText: '#ffffff',
+// Fonction pour créer le thème dynamiquement
+function buildTheme(primaryColor: string, secondaryColor: string, darkMode: boolean, compactMode: boolean) {
+  return createTheme({
+    palette: {
+      mode: darkMode ? 'dark' : 'light',
+      primary: {
+        main: primaryColor,
+      },
+      secondary: {
+        main: secondaryColor,
+      },
+      ...(darkMode
+        ? {
+            background: { default: '#121212', paper: '#1e1e1e' },
+            text: { primary: '#e0e0e0', secondary: '#aaaaaa' },
+          }
+        : {
+            background: { default: '#fafbfc', paper: '#ffffff' },
+            text: { primary: '#1a1a2e', secondary: '#546e7a' },
+          }),
+      success: { main: '#2e7d32', light: '#4caf50', dark: '#1b5e20' },
+      error: { main: '#d32f2f', light: '#ef5350', dark: '#c62828' },
+      warning: { main: '#ed6c02', light: '#ff9800', dark: '#e65100' },
+      info: { main: '#0288d1', light: '#03a9f4', dark: '#01579b' },
     },
-    secondary: {
-      main: '#f9a825',
-      light: '#ffc046',
-      dark: '#c17900',
-      contrastText: '#000000',
+    typography: {
+      fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+      fontSize: compactMode ? 13 : 14,
+      h1: { fontWeight: 700 },
+      h2: { fontWeight: 700 },
+      h3: { fontWeight: 600 },
+      h4: { fontWeight: 600 },
+      h5: { fontWeight: 600 },
+      h6: { fontWeight: 600 },
+      button: { textTransform: 'none' as const, fontWeight: 500 },
     },
-    background: {
-      default: '#fafbfc',
-      paper: '#ffffff',
+    shape: {
+      borderRadius: 8,
     },
-    text: {
-      primary: '#1a1a2e',
-      secondary: '#546e7a',
-    },
-    success: {
-      main: '#2e7d32',
-      light: '#4caf50',
-      dark: '#1b5e20',
-    },
-    error: {
-      main: '#d32f2f',
-      light: '#ef5350',
-      dark: '#c62828',
-    },
-    warning: {
-      main: '#ed6c02',
-      light: '#ff9800',
-      dark: '#e65100',
-    },
-    info: {
-      main: '#0288d1',
-      light: '#03a9f4',
-      dark: '#01579b',
-    },
-  },
-  typography: {
-    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-    h1: {
-      fontWeight: 700,
-    },
-    h2: {
-      fontWeight: 700,
-    },
-    h3: {
-      fontWeight: 600,
-    },
-    h4: {
-      fontWeight: 600,
-    },
-    h5: {
-      fontWeight: 600,
-    },
-    h6: {
-      fontWeight: 600,
-    },
-    button: {
-      textTransform: 'none',
-      fontWeight: 500,
-    },
-  },
-  shape: {
-    borderRadius: 8,
-  },
-  shadows: [
-    'none',
-    '0px 2px 4px rgba(10, 66, 117, 0.05)',
-    '0px 4px 8px rgba(10, 66, 117, 0.08)',
-    '0px 8px 16px rgba(10, 66, 117, 0.1)',
-    '0px 12px 24px rgba(10, 66, 117, 0.12)',
-    '0px 16px 32px rgba(10, 66, 117, 0.14)',
-    '0px 20px 40px rgba(10, 66, 117, 0.16)',
-    '0px 24px 48px rgba(10, 66, 117, 0.18)',
-    '0px 2px 4px rgba(10, 66, 117, 0.05)',
-    '0px 2px 4px rgba(10, 66, 117, 0.05)',
-    '0px 2px 4px rgba(10, 66, 117, 0.05)',
-    '0px 2px 4px rgba(10, 66, 117, 0.05)',
-    '0px 2px 4px rgba(10, 66, 117, 0.05)',
-    '0px 2px 4px rgba(10, 66, 117, 0.05)',
-    '0px 2px 4px rgba(10, 66, 117, 0.05)',
-    '0px 2px 4px rgba(10, 66, 117, 0.05)',
-    '0px 2px 4px rgba(10, 66, 117, 0.05)',
-    '0px 2px 4px rgba(10, 66, 117, 0.05)',
-    '0px 2px 4px rgba(10, 66, 117, 0.05)',
-    '0px 2px 4px rgba(10, 66, 117, 0.05)',
-    '0px 2px 4px rgba(10, 66, 117, 0.05)',
-    '0px 2px 4px rgba(10, 66, 117, 0.05)',
-    '0px 2px 4px rgba(10, 66, 117, 0.05)',
-    '0px 2px 4px rgba(10, 66, 117, 0.05)',
-    '0px 2px 4px rgba(10, 66, 117, 0.05)',
-  ],
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          borderRadius: 8,
-          padding: '8px 16px',
-          boxShadow: 'none',
-          '&:hover': {
-            boxShadow: '0px 4px 8px rgba(10, 66, 117, 0.15)',
+    spacing: compactMode ? 6 : 8,
+    shadows: [
+      'none',
+      '0px 2px 4px rgba(10, 66, 117, 0.05)',
+      '0px 4px 8px rgba(10, 66, 117, 0.08)',
+      '0px 8px 16px rgba(10, 66, 117, 0.1)',
+      '0px 12px 24px rgba(10, 66, 117, 0.12)',
+      '0px 16px 32px rgba(10, 66, 117, 0.14)',
+      '0px 20px 40px rgba(10, 66, 117, 0.16)',
+      '0px 24px 48px rgba(10, 66, 117, 0.18)',
+      '0px 2px 4px rgba(10, 66, 117, 0.05)',
+      '0px 2px 4px rgba(10, 66, 117, 0.05)',
+      '0px 2px 4px rgba(10, 66, 117, 0.05)',
+      '0px 2px 4px rgba(10, 66, 117, 0.05)',
+      '0px 2px 4px rgba(10, 66, 117, 0.05)',
+      '0px 2px 4px rgba(10, 66, 117, 0.05)',
+      '0px 2px 4px rgba(10, 66, 117, 0.05)',
+      '0px 2px 4px rgba(10, 66, 117, 0.05)',
+      '0px 2px 4px rgba(10, 66, 117, 0.05)',
+      '0px 2px 4px rgba(10, 66, 117, 0.05)',
+      '0px 2px 4px rgba(10, 66, 117, 0.05)',
+      '0px 2px 4px rgba(10, 66, 117, 0.05)',
+      '0px 2px 4px rgba(10, 66, 117, 0.05)',
+      '0px 2px 4px rgba(10, 66, 117, 0.05)',
+      '0px 2px 4px rgba(10, 66, 117, 0.05)',
+      '0px 2px 4px rgba(10, 66, 117, 0.05)',
+      '0px 2px 4px rgba(10, 66, 117, 0.05)',
+    ],
+    components: {
+      MuiButton: {
+        styleOverrides: {
+          root: {
+            borderRadius: 8,
+            padding: compactMode ? '6px 12px' : '8px 16px',
+            boxShadow: 'none',
+            '&:hover': {
+              boxShadow: '0px 4px 8px rgba(10, 66, 117, 0.15)',
+            },
+          },
+          containedPrimary: {
+            background: `linear-gradient(135deg, ${secondaryColor} 0%, ${secondaryColor}dd 100%)`,
+            '&:hover': {
+              background: `linear-gradient(135deg, ${secondaryColor}cc 0%, ${secondaryColor} 100%)`,
+            },
+          },
+          containedSecondary: {
+            background: `linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}bb 100%)`,
+            '&:hover': {
+              background: `linear-gradient(135deg, ${primaryColor}dd 0%, ${primaryColor} 100%)`,
+            },
           },
         },
-        containedPrimary: {
-          background: 'linear-gradient(135deg, #f9a825 0%, #fbc02d 100%)',
-          '&:hover': {
-            background: 'linear-gradient(135deg, #f57f17 0%, #f9a825 100%)',
+      },
+      MuiCard: {
+        styleOverrides: {
+          root: {
+            borderRadius: 12,
+            boxShadow: '0px 2px 8px rgba(10, 66, 117, 0.08)',
+            borderTop: `3px solid ${secondaryColor}`,
           },
         },
-        containedSecondary: {
-          background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
-          '&:hover': {
-            background: 'linear-gradient(135deg, #1565c0 0%, #1976d2 100%)',
+      },
+      MuiPaper: {
+        styleOverrides: {
+          root: {
+            backgroundImage: 'none',
           },
         },
       },
     },
-    MuiCard: {
-      styleOverrides: {
-        root: {
-          borderRadius: 12,
-          boxShadow: '0px 2px 8px rgba(10, 66, 117, 0.08)',
-          borderTop: '3px solid #f9a825',
-        },
-      },
-    },
-    MuiPaper: {
-      styleOverrides: {
-        root: {
-          backgroundImage: 'none',
-        },
-      },
-    },
-  },
-});
+  });
+}
 
 const App: React.FC = () => {
+  const { primaryColor, secondaryColor, darkMode, compactMode, applySettings, loaded } = useThemeStore();
+
+  // Charger les settings d'apparence depuis le backend au démarrage
+  useEffect(() => {
+    if (!loaded) {
+      const token = localStorage.getItem('token');
+      if (token) {
+        settingsAPI.getSettings()
+          .then((data) => {
+            applySettings({
+              primary_color: data.primary_color,
+              secondary_color: data.secondary_color,
+              dark_mode: data.dark_mode,
+              compact_mode: data.compact_mode,
+            });
+          })
+          .catch(() => { /* settings non disponibles, on garde les valeurs par défaut */ });
+      }
+    }
+  }, [loaded, applySettings]);
+
+  const theme = useMemo(
+    () => buildTheme(primaryColor, secondaryColor, darkMode, compactMode),
+    [primaryColor, secondaryColor, darkMode, compactMode]
+  );
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />

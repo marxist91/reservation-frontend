@@ -65,4 +65,10 @@ export const settingsAPI = {
     const response = await apiClient.delete<{ message: string; deleted: number; notificationsDeleted: number }>('/settings/clear-all-reservations');
     return response.data;
   },
+
+  // Envoyer un email de test
+  sendTestEmail: async (): Promise<{ message: string }> => {
+    const response = await apiClient.post<{ message: string }>('/settings/test-email');
+    return response.data;
+  },
 };

@@ -36,6 +36,7 @@ import {
 import RecurringMeetingsManager from '../../components/admin/RecurringMeetingsManager';
 import toast from 'react-hot-toast';
 import { settingsAPI } from '../../api/settings';
+import { useThemeStore } from '../../store/themeStore';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -286,7 +287,14 @@ const Settings: React.FC = () => {
         dark_mode: darkMode,
         compact_mode: compactMode,
       });
-      toast.success('Paramètres d\'apparence sauvegardés');
+      // Appliquer immédiatement au thème de l'application
+      useThemeStore.getState().applySettings({
+        primary_color: primaryColor,
+        secondary_color: secondaryColor,
+        dark_mode: darkMode,
+        compact_mode: compactMode,
+      });
+      toast.success('Paramètres d\'apparence sauvegardés et appliqués');
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
       toast.error('Erreur lors de la sauvegarde des paramètres');
@@ -311,11 +319,15 @@ const Settings: React.FC = () => {
     }
   };
 
-  const handleTestEmail = () => {
-    toast.loading('Envoi d\'un email de test...');
-    setTimeout(() => {
-      toast.success('Email de test envoyé avec succès');
-    }, 2000);
+  const handleTestEmail = async () => {
+    const toastId = toast.loading('Envoi d\'un email de test...');
+    try {
+      const result = await settingsAPI.sendTestEmail();
+      toast.success(result.message, { id: toastId });
+    } catch (error: any) {
+      const message = error?.response?.data?.message || 'Erreur lors de l\'envoi de l\'email de test';
+      toast.error(message, { id: toastId });
+    }
   };
 
   const toggleWorkingDay = (dayIndex: number) => {
@@ -874,7 +886,7 @@ const Settings: React.FC = () => {
                     label="Mode compact"
                   />
                   <Alert severity="info" sx={{ mt: 2 }}>
-                    Les changements de thème seront appliqués après rechargement
+                    Les changements de thème seront appliqués immédiatement après sauvegarde
                   </Alert>
                 </CardContent>
               </Card>
