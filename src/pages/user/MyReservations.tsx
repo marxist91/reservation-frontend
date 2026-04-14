@@ -7,7 +7,7 @@ import {
   Box,
   Typography,
   Paper,
-  CircularProgress,
+  Skeleton,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -27,10 +27,12 @@ import {
   TableHead,
   TableRow,
   TablePagination,
+  alpha,
 } from '@mui/material';
 import {
   ViewList as ListIcon,
   ViewModule as GridIcon,
+  EventNote as EventIcon,
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -182,34 +184,51 @@ const MyReservations: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
-        <CircularProgress />
+      <Box sx={{ p: { xs: 2, md: 4 } }}>
+        <Skeleton variant="rounded" width={280} height={40} sx={{ mb: 3 }} />
+        <Skeleton variant="rounded" height={48} sx={{ mb: 3, borderRadius: 2 }} />
+        <Grid container spacing={3}>
+          {[0,1,2,3,4,5].map(i => (
+            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={i}>
+              <Skeleton variant="rounded" height={200} sx={{ borderRadius: 3 }} />
+            </Grid>
+          ))}
+        </Grid>
       </Box>
     );
   }
 
   return (
-    <Box>
+    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1400, mx: 'auto' }}>
       {/* Section Propositions Alternatives */}
       <AlternativeProposals />
 
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4">
+        <Typography variant="h4" sx={{ fontWeight: 800, letterSpacing: '-0.02em' }}>
           Mes Réservations
         </Typography>
         <Box>
           <Tooltip title="Vue grille">
-            <IconButton 
+            <IconButton
               onClick={() => setViewMode('grid')}
-              color={viewMode === 'grid' ? 'primary' : 'default'}
+              sx={{
+                bgcolor: viewMode === 'grid' ? alpha('#1565c0', 0.1) : 'transparent',
+                color: viewMode === 'grid' ? '#1565c0' : 'text.secondary',
+                borderRadius: 2,
+                mr: 0.5,
+              }}
             >
               <GridIcon />
             </IconButton>
           </Tooltip>
           <Tooltip title="Vue liste">
-            <IconButton 
+            <IconButton
               onClick={() => setViewMode('list')}
-              color={viewMode === 'list' ? 'primary' : 'default'}
+              sx={{
+                bgcolor: viewMode === 'list' ? alpha('#1565c0', 0.1) : 'transparent',
+                color: viewMode === 'list' ? '#1565c0' : 'text.secondary',
+                borderRadius: 2,
+              }}
             >
               <ListIcon />
             </IconButton>
@@ -217,8 +236,29 @@ const MyReservations: React.FC = () => {
         </Box>
       </Box>
 
-      <Paper sx={{ mb: 3 }}>
-        <Tabs value={tabValue} onChange={(_e, v) => setTabValue(v)}>
+      <Paper
+        elevation={0}
+        sx={{
+          mb: 3,
+          borderRadius: 3,
+          border: '1px solid',
+          borderColor: 'divider',
+          overflow: 'hidden',
+        }}
+      >
+        <Tabs
+          value={tabValue}
+          onChange={(_e, v) => setTabValue(v)}
+          sx={{
+            '& .MuiTab-root': {
+              textTransform: 'none',
+              fontWeight: 600,
+              minHeight: 48,
+            },
+            '& .Mui-selected': { color: '#1565c0' },
+            '& .MuiTabs-indicator': { bgcolor: '#1565c0', height: 3, borderRadius: '3px 3px 0 0' },
+          }}
+        >
           <Tab label={`Toutes (${myReservations.length})`} />
           <Tab label={`En attente (${myReservations.filter(r => r.statut === 'en_attente').length})`} />
           <Tab label={`Confirmées (${myReservations.filter(r => ['confirmee', 'validee'].includes(r.statut || '')).length})`} />
@@ -227,9 +267,21 @@ const MyReservations: React.FC = () => {
       </Paper>
 
       {filteredReservations().length === 0 ? (
-        <Alert severity="info">
-          Aucune réservation {tabValue === 1 ? 'en attente' : tabValue === 2 ? 'confirmée' : ''} pour le moment.
-        </Alert>
+        <Paper
+          elevation={0}
+          sx={{
+            p: 5,
+            textAlign: 'center',
+            borderRadius: 3,
+            border: '1px solid',
+            borderColor: 'divider',
+          }}
+        >
+          <EventIcon sx={{ fontSize: 56, color: 'text.disabled', mb: 1.5 }} />
+          <Typography color="text.secondary" variant="body1">
+            Aucune réservation {tabValue === 1 ? 'en attente' : tabValue === 2 ? 'confirmée' : ''} pour le moment.
+          </Typography>
+        </Paper>
       ) : viewMode === 'grid' ? (
         <Grid container spacing={3}>
           {paginatedReservations.map((reservation) => (
@@ -245,16 +297,16 @@ const MyReservations: React.FC = () => {
           ))}
         </Grid>
       ) : (
-        <TableContainer component={Paper}>
+        <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
           <Table>
             <TableHead>
-              <TableRow sx={{ bgcolor: 'primary.main' }}>
-                <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Salle</TableCell>
-                <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Date</TableCell>
-                <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Horaires</TableCell>
-                <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Motif</TableCell>
-                <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Statut</TableCell>
-                <TableCell sx={{ color: 'white', fontWeight: 'bold' }} align="center">Actions</TableCell>
+              <TableRow sx={{ bgcolor: alpha('#0a2463', 0.04) }}>
+                <TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Salle</TableCell>
+                <TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Date</TableCell>
+                <TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Horaires</TableCell>
+                <TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Motif</TableCell>
+                <TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Statut</TableCell>
+                <TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' }} align="center">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -298,17 +350,20 @@ const MyReservations: React.FC = () => {
                   </TableCell>
                   <TableCell align="center">
                     <Box display="flex" gap={1} justifyContent="center">
-                      <Button 
-                        size="small" 
+                      <Button
+                        size="small"
                         onClick={() => handleView(reservation)}
+                        sx={{ textTransform: 'none', fontWeight: 600, borderRadius: 2 }}
                       >
                         Détails
                       </Button>
                       {reservation.statut === 'en_attente' && (
-                        <Button 
-                          size="small" 
+                        <Button
+                          size="small"
                           color="error"
+                          variant="outlined"
                           onClick={() => handleCancel(reservation)}
+                          sx={{ textTransform: 'none', fontWeight: 600, borderRadius: 2 }}
                         >
                           Annuler
                         </Button>
@@ -339,8 +394,14 @@ const MyReservations: React.FC = () => {
       )}
 
       {/* Dialog détails */}
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Détails de la Réservation</DialogTitle>
+      <Dialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 3, p: 1 } }}
+      >
+        <DialogTitle sx={{ fontWeight: 700 }}>Détails de la Réservation</DialogTitle>
         <DialogContent>
           {selectedReservation && (
             <Box sx={{ pt: 1 }}>
@@ -419,26 +480,35 @@ const MyReservations: React.FC = () => {
             </Box>
           )}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDialogOpen(false)}>Fermer</Button>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setDialogOpen(false)} sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}>
+            Fermer
+          </Button>
         </DialogActions>
       </Dialog>
 
       {/* Dialog confirmation annulation */}
-      <Dialog open={cancelDialogOpen} onClose={() => setCancelDialogOpen(false)}>
-        <DialogTitle>Confirmer l'annulation</DialogTitle>
+      <Dialog
+        open={cancelDialogOpen}
+        onClose={() => setCancelDialogOpen(false)}
+        PaperProps={{ sx: { borderRadius: 3, p: 1 } }}
+      >
+        <DialogTitle sx={{ fontWeight: 700 }}>Confirmer l'annulation</DialogTitle>
         <DialogContent>
           <Typography>
             Êtes-vous sûr de vouloir annuler cette réservation ?
           </Typography>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setCancelDialogOpen(false)}>Non</Button>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setCancelDialogOpen(false)} sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}>
+            Non
+          </Button>
           <Button
             onClick={handleCancelReservation}
             color="error"
             variant="contained"
             disabled={cancelReservation.isPending}
+            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
           >
             {cancelReservation.isPending ? 'Annulation...' : 'Oui, annuler'}
           </Button>

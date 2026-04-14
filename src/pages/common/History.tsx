@@ -22,6 +22,7 @@ import {
   Avatar,
   Tooltip,
   IconButton,
+  alpha,
 } from '@mui/material';
 import {
   History as HistoryIcon,
@@ -175,13 +176,13 @@ const History: React.FC = () => {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1400, mx: 'auto' }}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} flexWrap="wrap" gap={2}>
         <Box>
-          <Typography variant="h4" fontWeight="bold" gutterBottom>
+          <Typography variant="h4" sx={{ fontWeight: 800, letterSpacing: '-0.02em' }}>
             Mon Historique
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body1" color="text.secondary" sx={{ mt: 0.5 }}>
             {displayedHistory.length} action{displayedHistory.length > 1 ? 's' : ''} affichée{displayedHistory.length > 1 ? 's' : ''}
           </Typography>
         </Box>
@@ -191,11 +192,16 @@ const History: React.FC = () => {
             startIcon={<DownloadIcon />}
             onClick={handleExport}
             disabled={displayedHistory.length === 0}
+            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
           >
             Exporter
           </Button>
           <Tooltip title="Actualiser">
-            <IconButton onClick={() => fetchMyHistory()} disabled={isLoading}>
+            <IconButton
+              onClick={() => fetchMyHistory()}
+              disabled={isLoading}
+              sx={{ bgcolor: alpha('#1565c0', 0.08), color: '#1565c0', borderRadius: 2, '&:hover': { bgcolor: alpha('#1565c0', 0.15) } }}
+            >
               <RefreshIcon />
             </IconButton>
           </Tooltip>
@@ -205,9 +211,9 @@ const History: React.FC = () => {
       {/* Statistiques */}
       <Grid container spacing={2} mb={3}>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card>
+          <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
             <CardContent>
-              <Typography variant="h4" fontWeight="bold" color="primary.main">
+              <Typography variant="h4" sx={{ fontWeight: 700, color: '#1565c0' }}>
                 {personalStats.total}
               </Typography>
               <Typography variant="body2" color="text.secondary">
@@ -217,9 +223,9 @@ const History: React.FC = () => {
           </Card>
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card>
+          <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
             <CardContent>
-              <Typography variant="h4" fontWeight="bold" color="success.main">
+              <Typography variant="h4" sx={{ fontWeight: 700, color: '#2e7d32' }}>
                 {personalStats.byType['reservation_created'] || 0}
               </Typography>
               <Typography variant="body2" color="text.secondary">
@@ -229,9 +235,9 @@ const History: React.FC = () => {
           </Card>
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card>
+          <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
             <CardContent>
-              <Typography variant="h4" fontWeight="bold" color="info.main">
+              <Typography variant="h4" sx={{ fontWeight: 700, color: '#1565c0' }}>
                 {personalStats.byType['reservation_validated'] || 0}
               </Typography>
               <Typography variant="body2" color="text.secondary">
@@ -241,9 +247,9 @@ const History: React.FC = () => {
           </Card>
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card>
+          <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
             <CardContent>
-              <Typography variant="h4" fontWeight="bold" color="error.main">
+              <Typography variant="h4" sx={{ fontWeight: 700, color: '#c62828' }}>
                 {personalStats.byType['reservation_rejected'] || 0}
               </Typography>
               <Typography variant="body2" color="text.secondary">
@@ -255,10 +261,10 @@ const History: React.FC = () => {
       </Grid>
 
       {/* Filtres */}
-      <Paper sx={{ p: 2, mb: 3 }}>
+      <Paper elevation={0} sx={{ p: 2.5, mb: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
         <Box display="flex" alignItems="center" gap={1} mb={2}>
-          <FilterIcon />
-          <Typography variant="h6">Filtres</Typography>
+          <FilterIcon sx={{ color: '#1565c0' }} />
+          <Typography variant="h6" sx={{ fontWeight: 700 }}>Filtres</Typography>
         </Box>
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, md: 4 }}>
@@ -316,6 +322,7 @@ const History: React.FC = () => {
               variant="outlined"
               onClick={resetFilters}
               startIcon={<ClearIcon />}
+              sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
             >
               Reset
             </Button>
@@ -324,26 +331,26 @@ const History: React.FC = () => {
       </Paper>
 
       {/* Table */}
-      <TableContainer component={Paper}>
+      <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
         {displayedHistory.length === 0 ? (
-          <Box sx={{ p: 8, textAlign: 'center', color: 'text.secondary' }}>
-            <HistoryIcon sx={{ fontSize: 100, opacity: 0.2, mb: 2 }} />
-            <Typography variant="h6" gutterBottom>
+          <Box sx={{ p: 6, textAlign: 'center', color: 'text.secondary' }}>
+            <HistoryIcon sx={{ fontSize: 64, opacity: 0.15, mb: 1.5 }} />
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
               Aucune action trouvée
             </Typography>
-            <Typography variant="body2">
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
               Aucune action ne correspond à vos critères de recherche
             </Typography>
           </Box>
         ) : (
           <Table>
             <TableHead>
-              <TableRow>
-                <TableCell>Date & Heure</TableCell>
-                <TableCell>Action</TableCell>
-                <TableCell>Utilisateur</TableCell>
-                <TableCell>Description</TableCell>
-                {isAdmin && <TableCell>Détails</TableCell>}
+              <TableRow sx={{ bgcolor: alpha('#0a2463', 0.04) }}>
+                <TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Date & Heure</TableCell>
+                <TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Action</TableCell>
+                <TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Utilisateur</TableCell>
+                <TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Description</TableCell>
+                {isAdmin && <TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Détails</TableCell>}
               </TableRow>
             </TableHead>
             <TableBody>

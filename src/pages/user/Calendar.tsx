@@ -20,8 +20,10 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  Skeleton,
   SelectChangeEvent,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import {
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
@@ -219,8 +221,16 @@ const Calendar: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <Typography>Chargement du calendrier...</Typography>
+      <Box sx={{ p: 3 }}>
+        <Skeleton variant="text" width={320} height={48} sx={{ mb: 3 }} />
+        <Grid container spacing={3}>
+          <Grid size={{ xs: 12, lg: 8 }}>
+            <Skeleton variant="rectangular" height={500} sx={{ borderRadius: 3 }} />
+          </Grid>
+          <Grid size={{ xs: 12, lg: 4 }}>
+            <Skeleton variant="rectangular" height={300} sx={{ borderRadius: 3 }} />
+          </Grid>
+        </Grid>
       </Box>
     );
   }
@@ -228,7 +238,7 @@ const Calendar: React.FC = () => {
   return (
     <Box sx={{ p: 3 }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4" fontWeight="bold">
+        <Typography variant="h4" sx={{ fontWeight: 800, letterSpacing: '-0.02em' }}>
           Calendrier des Réservations
         </Typography>
         <Box display="flex" gap={2} alignItems="center">
@@ -238,6 +248,7 @@ const Calendar: React.FC = () => {
               value={viewMode}
               label="Vue"
               onChange={handleViewModeChange}
+              sx={{ borderRadius: 2 }}
             >
               <MenuItem value="month">Mois</MenuItem>
               <MenuItem value="week">Semaine</MenuItem>
@@ -247,7 +258,17 @@ const Calendar: React.FC = () => {
             variant={isCurrentMonth && selectedDate?.toDateString() === today.toDateString() ? "contained" : "outlined"}
             startIcon={<TodayIcon />}
             onClick={goToToday}
-            color={isCurrentMonth ? "success" : "primary"}
+            sx={{
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              ...(isCurrentMonth && selectedDate?.toDateString() === today.toDateString()
+                ? {
+                    background: 'linear-gradient(135deg, #0a2463 0%, #1565c0 100%)',
+                    '&:hover': { background: 'linear-gradient(135deg, #0a2463 0%, #1565c0 100%)' },
+                  }
+                : {}),
+            }}
           >
             Aujourd'hui
           </Button>
@@ -256,12 +277,12 @@ const Calendar: React.FC = () => {
 
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, lg: 8 }}>
-          <Paper sx={{ p: 2 }}>
+          <Paper elevation={0} sx={{ p: 2, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
             <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
               <IconButton onClick={viewMode === 'month' ? goToPreviousMonth : goToPreviousWeek}>
                 <ChevronLeftIcon />
               </IconButton>
-              <Typography variant="h6" fontWeight="medium" sx={{ textTransform: 'capitalize' }}>
+              <Typography variant="h6" fontWeight={700} sx={{ textTransform: 'capitalize' }}>
                 {viewMode === 'month' ? monthName : weekPeriod}
               </Typography>
               <IconButton onClick={viewMode === 'month' ? goToNextMonth : goToNextWeek}>
@@ -288,13 +309,13 @@ const Calendar: React.FC = () => {
                       alignItems="center"
                       py={1.5}
                       sx={{
-                        bgcolor: 'primary.main',
-                        color: 'white',
-                        borderRadius: 1,
+                        bgcolor: alpha('#0a2463', 0.06),
+                        color: 'text.primary',
+                        borderRadius: 2,
                         overflow: 'hidden',
                       }}
                     >
-                      <Typography variant="body2" fontWeight="bold" noWrap>
+                      <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }} noWrap>
                         {day}
                       </Typography>
                     </Box>
@@ -320,17 +341,18 @@ const Calendar: React.FC = () => {
                     return (
                       <Paper
                         key={date.toISOString()}
-                        elevation={isSelected(date) ? 3 : 1}
+                        elevation={0}
                         onClick={() => setSelectedDate(date)}
                         sx={{
                           minHeight: 100,
                           p: 1.5,
                           cursor: 'pointer',
                           border: isToday(date) ? '2px solid' : '1px solid',
-                          borderColor: isToday(date) ? 'primary.main' : 'divider',
-                          bgcolor: isSelected(date) ? 'primary.50' : 'background.paper',
+                          borderColor: isToday(date) ? '#1565c0' : 'divider',
+                          bgcolor: isSelected(date) ? alpha('#1565c0', 0.06) : 'background.paper',
+                          borderRadius: 2,
                           '&:hover': {
-                            bgcolor: isSelected(date) ? 'primary.100' : 'action.hover',
+                            bgcolor: isSelected(date) ? alpha('#1565c0', 0.1) : 'action.hover',
                             transform: 'translateY(-2px)',
                             boxShadow: 2,
                           },
@@ -578,19 +600,21 @@ const Calendar: React.FC = () => {
 
         <Grid size={{ xs: 12, lg: 4 }}>
           <Paper 
-            elevation={3}
+            elevation={0}
             sx={{ 
               p: 3, 
               position: 'sticky', 
               top: 16,
-              borderRadius: 2,
+              borderRadius: 3,
+              border: '1px solid',
+              borderColor: 'divider',
               maxHeight: 'calc(100vh - 100px)',
               overflow: 'auto',
             }}
           >
             <Box display="flex" alignItems="center" gap={1} mb={2}>
-              <Box sx={{ width: 4, height: 32, bgcolor: 'primary.main', borderRadius: 1 }} />
-              <Typography variant="h6" fontWeight="bold">
+              <Box sx={{ width: 4, height: 32, bgcolor: '#1565c0', borderRadius: 1 }} />
+              <Typography variant="h6" sx={{ fontWeight: 700 }}>
                 {selectedDate 
                   ? selectedDate.toLocaleDateString('fr-FR', { 
                       weekday: 'long', 
@@ -605,7 +629,7 @@ const Calendar: React.FC = () => {
             {selectedDate && (
               <Box mt={3}>
                 {selectedDayReservations.length === 0 ? (
-                  <Box textAlign="center" py={6} sx={{ bgcolor: 'grey.50', borderRadius: 2 }}>
+                  <Box textAlign="center" py={6} sx={{ bgcolor: alpha('#1565c0', 0.04), borderRadius: 2 }}>
                     <Typography variant="h2" sx={{ opacity: 0.3, mb: 1 }}>
                       📅
                     </Typography>
@@ -631,15 +655,16 @@ const Calendar: React.FC = () => {
                         .map((reservation) => (
                         <Card 
                           key={reservation.id} 
-                          elevation={2}
+                          elevation={0}
                           sx={{
                             border: '1px solid',
                             borderColor: 'divider',
                             borderLeft: '4px solid',
                             borderLeftColor: `${RESERVATION_STATUS_COLORS[reservation.statut] || 'primary'}.main`,
+                            borderRadius: 3,
                             transition: 'all 0.2s',
                             '&:hover': {
-                              boxShadow: 4,
+                              boxShadow: `0 4px 12px ${alpha('#000', 0.08)}`,
                               transform: 'translateX(4px)',
                             },
                           }}
@@ -647,7 +672,7 @@ const Calendar: React.FC = () => {
                             <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                             <Box display="flex" justifyContent="space-between" alignItems="start" mb={1.5}>
                               <Box flex={1}>
-                                <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                              <Typography variant="subtitle1" sx={{ fontWeight: 700 }} gutterBottom>
                                   {reservation.salle?.nom || 'Salle inconnue'}
                                 </Typography>
                                 <Box display="flex" alignItems="center" gap={1}>
@@ -685,9 +710,9 @@ const Calendar: React.FC = () => {
                               alignItems="center" 
                               gap={1} 
                               mb={1}
-                              sx={{ bgcolor: 'grey.50', p: 1, borderRadius: 1 }}
+                              sx={{ bgcolor: alpha('#1565c0', 0.06), p: 1, borderRadius: 1 }}
                             >
-                              <Typography variant="body2" fontWeight="bold" color="primary.main">
+                              <Typography variant="body2" fontWeight="bold" color="#1565c0">
                                 {formatTimeRange(reservation.heure_debut, reservation.heure_fin)}
                               </Typography>
                             </Box>

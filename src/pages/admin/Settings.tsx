@@ -19,8 +19,9 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
-  CircularProgress,
+  Skeleton,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import {
   Settings as SettingsIcon,
   Notifications as NotificationsIcon,
@@ -124,7 +125,7 @@ const Settings: React.FC = () => {
     setLoading(true);
     try {
       const data = await settingsAPI.getSettings();
-      console.log('📥 Settings reçues du backend:', data);
+      console.log('📊 Settings reçues du backend:', data);
       
       // Général
       setAppName(data.app_name);
@@ -349,8 +350,18 @@ const Settings: React.FC = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <Typography>Chargement des paramètres...</Typography>
+      <Box>
+        <Skeleton variant="text" width={350} height={48} sx={{ mb: 1 }} />
+        <Skeleton variant="text" width={250} height={24} sx={{ mb: 3 }} />
+        <Skeleton variant="rectangular" height={48} sx={{ borderRadius: 2, mb: 3 }} />
+        <Grid container spacing={3}>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Skeleton variant="rectangular" height={220} sx={{ borderRadius: 3 }} />
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Skeleton variant="rectangular" height={220} sx={{ borderRadius: 3 }} />
+          </Grid>
+        </Grid>
       </Box>
     );
   }
@@ -358,9 +369,22 @@ const Settings: React.FC = () => {
   return (
     <Box>
       <Box display="flex" alignItems="center" mb={3}>
-        <SettingsIcon sx={{ fontSize: 40, mr: 2, color: 'primary.main' }} />
+        <Box
+          sx={{
+            width: 48,
+            height: 48,
+            borderRadius: 2,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            bgcolor: alpha('#1565c0', 0.08),
+            mr: 2,
+          }}
+        >
+          <SettingsIcon sx={{ fontSize: 28, color: '#1565c0' }} />
+        </Box>
         <Box>
-          <Typography variant="h4" fontWeight="bold">
+          <Typography variant="h4" sx={{ fontWeight: 800, letterSpacing: '-0.02em' }}>
             Paramètres du Système
           </Typography>
           <Typography variant="body2" color="text.secondary">
@@ -369,8 +393,15 @@ const Settings: React.FC = () => {
         </Box>
       </Box>
 
-      <Paper>
-        <Tabs value={tabValue} onChange={handleTabChange} variant="scrollable" scrollButtons="auto">
+      <Paper elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
+        <Tabs
+          value={tabValue}
+          onChange={handleTabChange}
+          variant="scrollable"
+          scrollButtons="auto"
+          TabIndicatorProps={{ sx: { bgcolor: '#1565c0', height: 3, borderRadius: '3px 3px 0 0' } }}
+          sx={{ '& .MuiTab-root': { fontWeight: 600, textTransform: 'none' } }}
+        >
           <Tab icon={<SettingsIcon />} label="Général" />
           <Tab icon={<NotificationsIcon />} label="Notifications" />
           <Tab icon={<SecurityIcon />} label="Sécurité" />
@@ -384,9 +415,9 @@ const Settings: React.FC = () => {
         <TabPanel value={tabValue} index={0}>
           <Grid container spacing={3}>
             <Grid size={{ xs: 12, md: 6 }}>
-              <Card>
+              <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
                 <CardContent>
-                  <Typography variant="h6" gutterBottom>
+                  <Typography variant="h6" sx={{ fontWeight: 700 }} gutterBottom>
                     Informations de l'application
                   </Typography>
                   <TextField
@@ -410,9 +441,9 @@ const Settings: React.FC = () => {
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <Card>
+              <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
                 <CardContent>
-                  <Typography variant="h6" gutterBottom>
+                  <Typography variant="h6" sx={{ fontWeight: 700 }} gutterBottom>
                     Limites de réservation
                   </Typography>
                   <TextField
@@ -448,10 +479,10 @@ const Settings: React.FC = () => {
 
             <Grid size={{ xs: 12 }}>
               <Box display="flex" justifyContent="flex-end" gap={2}>
-                <Button variant="outlined" startIcon={<RefreshIcon />}>
+                <Button variant="outlined" startIcon={<RefreshIcon />} sx={{ borderRadius: 2, textTransform: 'none' }}>
                   Réinitialiser
                 </Button>
-                <Button variant="contained" startIcon={<SaveIcon />} onClick={handleSaveGeneralSettings}>
+                <Button variant="contained" startIcon={<SaveIcon />} onClick={handleSaveGeneralSettings} sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600, background: 'linear-gradient(135deg, #0a2463 0%, #1565c0 100%)', '&:hover': { background: 'linear-gradient(135deg, #0a2463 0%, #1565c0 100%)' } }}>
                   Sauvegarder
                 </Button>
               </Box>
@@ -459,9 +490,9 @@ const Settings: React.FC = () => {
 
             {/* Zone de danger */}
             <Grid size={{ xs: 12 }}>
-              <Card sx={{ border: '2px solid', borderColor: 'error.main', mt: 2 }}>
+              <Card elevation={0} sx={{ border: '2px solid', borderColor: 'error.main', mt: 2, borderRadius: 3 }}>
                 <CardContent>
-                  <Typography variant="h6" color="error" gutterBottom>
+                  <Typography variant="h6" color="error" sx={{ fontWeight: 700 }} gutterBottom>
                     Zone de danger
                   </Typography>
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -473,6 +504,7 @@ const Settings: React.FC = () => {
                     color="error"
                     startIcon={<DeleteForeverIcon />}
                     onClick={() => setClearDialogOpen(true)}
+                    sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
                   >
                     Vider les réservations passées
                   </Button>
@@ -482,8 +514,8 @@ const Settings: React.FC = () => {
           </Grid>
 
           {/* Dialog de confirmation */}
-          <Dialog open={clearDialogOpen} onClose={() => { setClearDialogOpen(false); setConfirmText(''); }}>
-            <DialogTitle sx={{ color: 'error.main' }}>⚠️ Confirmer la suppression</DialogTitle>
+          <Dialog open={clearDialogOpen} onClose={() => { setClearDialogOpen(false); setConfirmText(''); }} PaperProps={{ sx: { borderRadius: 3, p: 1 } }}>
+            <DialogTitle sx={{ color: 'error.main', fontWeight: 700 }}>🗑️ Confirmer la suppression</DialogTitle>
             <DialogContent>
               <DialogContentText sx={{ mb: 2 }}>
                 Vous êtes sur le point de supprimer toutes les réservations <strong>passées</strong> de la base de données.
@@ -504,7 +536,7 @@ const Settings: React.FC = () => {
               />
             </DialogContent>
             <DialogActions>
-              <Button onClick={() => { setClearDialogOpen(false); setConfirmText(''); }}>
+              <Button onClick={() => { setClearDialogOpen(false); setConfirmText(''); }} sx={{ borderRadius: 2, textTransform: 'none' }}>
                 Annuler
               </Button>
               <Button
@@ -512,7 +544,8 @@ const Settings: React.FC = () => {
                 color="error"
                 variant="contained"
                 disabled={confirmText !== 'SUPPRIMER' || clearLoading}
-                startIcon={clearLoading ? <CircularProgress size={20} /> : <DeleteForeverIcon />}
+                startIcon={clearLoading ? <Skeleton variant="circular" width={20} height={20} /> : <DeleteForeverIcon />}
+                sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
               >
                 {clearLoading ? 'Suppression...' : 'Tout supprimer'}
               </Button>
@@ -626,10 +659,10 @@ const Settings: React.FC = () => {
 
             <Grid size={{ xs: 12 }}>
               <Box display="flex" justifyContent="flex-end" gap={2}>
-                <Button variant="outlined" startIcon={<RefreshIcon />}>
+                <Button variant="outlined" startIcon={<RefreshIcon />} sx={{ borderRadius: 2, textTransform: 'none' }}>
                   Réinitialiser
                 </Button>
-                <Button variant="contained" startIcon={<SaveIcon />} onClick={handleSaveNotificationSettings}>
+                <Button variant="contained" startIcon={<SaveIcon />} onClick={handleSaveNotificationSettings} sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600, background: 'linear-gradient(135deg, #0a2463 0%, #1565c0 100%)', '&:hover': { background: 'linear-gradient(135deg, #0a2463 0%, #1565c0 100%)' } }}>
                   Sauvegarder
                 </Button>
               </Box>
@@ -719,10 +752,10 @@ const Settings: React.FC = () => {
 
             <Grid size={{ xs: 12 }}>
               <Box display="flex" justifyContent="flex-end" gap={2}>
-                <Button variant="outlined" startIcon={<RefreshIcon />}>
+                <Button variant="outlined" startIcon={<RefreshIcon />} sx={{ borderRadius: 2, textTransform: 'none' }}>
                   Réinitialiser
                 </Button>
-                <Button variant="contained" startIcon={<SaveIcon />} onClick={handleSaveSecuritySettings}>
+                <Button variant="contained" startIcon={<SaveIcon />} onClick={handleSaveSecuritySettings} sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600, background: 'linear-gradient(135deg, #0a2463 0%, #1565c0 100%)', '&:hover': { background: 'linear-gradient(135deg, #0a2463 0%, #1565c0 100%)' } }}>
                   Sauvegarder
                 </Button>
               </Box>
@@ -812,10 +845,10 @@ const Settings: React.FC = () => {
 
             <Grid size={{ xs: 12 }}>
               <Box display="flex" justifyContent="flex-end" gap={2}>
-                <Button variant="outlined" startIcon={<RefreshIcon />}>
+                <Button variant="outlined" startIcon={<RefreshIcon />} sx={{ borderRadius: 2, textTransform: 'none' }}>
                   Réinitialiser
                 </Button>
-                <Button variant="contained" startIcon={<SaveIcon />} onClick={handleSaveScheduleSettings}>
+                <Button variant="contained" startIcon={<SaveIcon />} onClick={handleSaveScheduleSettings} sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600, background: 'linear-gradient(135deg, #0a2463 0%, #1565c0 100%)', '&:hover': { background: 'linear-gradient(135deg, #0a2463 0%, #1565c0 100%)' } }}>
                   Sauvegarder
                 </Button>
               </Box>
@@ -894,10 +927,10 @@ const Settings: React.FC = () => {
 
             <Grid size={{ xs: 12 }}>
               <Box display="flex" justifyContent="flex-end" gap={2}>
-                <Button variant="outlined" startIcon={<RefreshIcon />}>
+                <Button variant="outlined" startIcon={<RefreshIcon />} sx={{ borderRadius: 2, textTransform: 'none' }}>
                   Réinitialiser
                 </Button>
-                <Button variant="contained" startIcon={<SaveIcon />} onClick={handleSaveAppearanceSettings}>
+                <Button variant="contained" startIcon={<SaveIcon />} onClick={handleSaveAppearanceSettings} sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600, background: 'linear-gradient(135deg, #0a2463 0%, #1565c0 100%)', '&:hover': { background: 'linear-gradient(135deg, #0a2463 0%, #1565c0 100%)' } }}>
                   Sauvegarder
                 </Button>
               </Box>
@@ -998,10 +1031,10 @@ const Settings: React.FC = () => {
 
             <Grid size={{ xs: 12 }}>
               <Box display="flex" justifyContent="flex-end" gap={2}>
-                <Button variant="outlined" startIcon={<RefreshIcon />}>
+                <Button variant="outlined" startIcon={<RefreshIcon />} sx={{ borderRadius: 2, textTransform: 'none' }}>
                   Réinitialiser
                 </Button>
-                <Button variant="contained" startIcon={<SaveIcon />} onClick={handleSaveEmailSettings}>
+                <Button variant="contained" startIcon={<SaveIcon />} onClick={handleSaveEmailSettings} sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600, background: 'linear-gradient(135deg, #0a2463 0%, #1565c0 100%)', '&:hover': { background: 'linear-gradient(135deg, #0a2463 0%, #1565c0 100%)' } }}>
                   Sauvegarder
                 </Button>
               </Box>

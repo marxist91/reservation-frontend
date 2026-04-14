@@ -102,7 +102,7 @@ const AdminNotifications: React.FC = () => {
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Box>
-          <Typography variant="h4" gutterBottom>
+          <Typography variant="h4" sx={{ fontWeight: 800, letterSpacing: '-0.02em' }} gutterBottom>
             Notifications Globales
           </Typography>
           <Typography variant="body2" color="text.secondary">
@@ -115,6 +115,7 @@ const AdminNotifications: React.FC = () => {
             startIcon={<DoneAllIcon />}
             onClick={markAllAsRead}
             disabled={unreadCount === 0}
+            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
           >
             Tout marquer comme lu
           </Button>
@@ -122,6 +123,7 @@ const AdminNotifications: React.FC = () => {
             variant="outlined"
             color="error"
             onClick={clearRead}
+            sx={{ borderRadius: 2, textTransform: 'none' }}
           >
             Effacer les lues
           </Button>
@@ -129,14 +131,15 @@ const AdminNotifications: React.FC = () => {
             variant="outlined"
             color="error"
             onClick={clearAll}
+            sx={{ borderRadius: 2, textTransform: 'none' }}
           >
             Tout supprimer
           </Button>
         </Box>
       </Box>
 
-      <Paper sx={{ mb: 2 }}>
-        <Tabs value={tabValue} onChange={(_e, v) => setTabValue(v)}>
+      <Paper elevation={0} sx={{ mb: 2, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
+        <Tabs value={tabValue} onChange={(_e, v) => setTabValue(v)} sx={{ '& .MuiTab-root': { textTransform: 'none', fontWeight: 600 }, '& .MuiTabs-indicator': { bgcolor: '#1565c0', height: 3, borderRadius: '3px 3px 0 0' } }}>
           <Tab label={`Toutes (${allNotifications.length})`} />
           <Tab 
             label={
@@ -156,7 +159,7 @@ const AdminNotifications: React.FC = () => {
         </Tabs>
       </Paper>
 
-      <Paper sx={{ p: 2, mb: 2 }}>
+      <Paper elevation={0} sx={{ p: 2, mb: 2, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
         <FormControl fullWidth size="small">
           <InputLabel>Filtrer par type</InputLabel>
           <Select<FilterType>
@@ -174,7 +177,7 @@ const AdminNotifications: React.FC = () => {
         </FormControl>
       </Paper>
 
-      <Paper>
+      <Paper elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
         {paginatedNotifications.length === 0 ? (
           <Box textAlign="center" py={8}>
             <NotificationsIcon sx={{ fontSize: 100, color: 'text.disabled', mb: 2 }} />

@@ -51,6 +51,7 @@ interface ReservationCardProps {
   onView?: ((reservation: Reservation) => void) | undefined;
   onValidate?: ((reservation: Reservation) => void) | undefined;
   onReject?: ((reservation: Reservation) => void) | undefined;
+  onDelete?: ((reservation: Reservation) => void) | undefined;
   showActions?: boolean;
   isAdmin?: boolean;
 }
@@ -61,6 +62,7 @@ const ReservationCard: React.FC<ReservationCardProps> = ({
   onView, 
   onValidate,
   onReject,
+  onDelete,
   showActions = true,
   isAdmin = false,
 }) => {
@@ -202,6 +204,17 @@ const ReservationCard: React.FC<ReservationCardProps> = ({
               onClick={() => onCancel(reservation)}
             >
               Annuler
+            </Button>
+          )}
+
+          {onDelete && (
+            <Button 
+              size="small" 
+              color="error"
+              onClick={() => onDelete(reservation)}
+              sx={{ ml: 'auto' }}
+            >
+              Supprimer
             </Button>
           )}
         </CardActions>

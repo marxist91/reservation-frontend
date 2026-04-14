@@ -9,7 +9,7 @@ import {
   Typography,
   Card,
   CardContent,
-  CircularProgress,
+  Skeleton,
   Chip,
   Select,
   MenuItem,
@@ -25,6 +25,7 @@ import {
   SelectChangeEvent,
   
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import {
   TrendingUp,
   People,
@@ -301,8 +302,26 @@ const Statistics: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
-        <CircularProgress />
+      <Box sx={{ width: '100%' }}>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+          <Skeleton variant="text" width={320} height={48} />
+          <Skeleton variant="rounded" width={200} height={40} />
+        </Box>
+        <Grid container spacing={3} mb={3}>
+          {[1, 2, 3, 4].map((i) => (
+            <Grid size={{ xs: 12, sm: 6, md: 3 }} key={i}>
+              <Skeleton variant="rounded" height={140} sx={{ borderRadius: 3 }} />
+            </Grid>
+          ))}
+        </Grid>
+        <Grid container spacing={3} mb={3}>
+          {[1, 2, 3].map((i) => (
+            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={i}>
+              <Skeleton variant="rounded" height={100} sx={{ borderRadius: 3 }} />
+            </Grid>
+          ))}
+        </Grid>
+        <Skeleton variant="rounded" height={360} sx={{ borderRadius: 3 }} />
       </Box>
     );
   }
@@ -310,220 +329,161 @@ const Statistics: React.FC = () => {
   return (
     <Box sx={{ width: '100%' }}>
       {/* Header */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4" fontWeight={700}>
-          📊 Statistiques et Analytiques
-        </Typography>
-                <FormControl size="small" sx={{ minWidth: 200 }}>
-          <InputLabel>Période</InputLabel>
-          <Select
-            value={periodFilter}
-            label="Période"
-            onChange={handlePeriodChange}
-          >
-            <MenuItem value="month">Ce mois</MenuItem>
-            <MenuItem value="quarter">3 derniers mois</MenuItem>
-                    <MenuItem value="year">12 derniers mois</MenuItem>
-                    <MenuItem value="custom">Plage personnalisée</MenuItem>
-          </Select>
-        </FormControl>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', md: 'center' }, flexDirection: { xs: 'column', md: 'row' }, gap: 2, mb: 4 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box sx={{
+            width: 56, height: 56, borderRadius: 3,
+            background: 'linear-gradient(135deg, #0a2463 0%, #1565c0 100%)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 4px 14px rgba(10, 36, 99, 0.25)',
+          }}>
+            <TrendingUp sx={{ color: 'white', fontSize: 28 }} />
+          </Box>
+          <Box>
+            <Typography variant="h4" sx={{ fontWeight: 800, letterSpacing: '-0.02em' }}>
+              Statistiques et Analytiques
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Vue d'ensemble des performances et tendances
+            </Typography>
+          </Box>
+        </Box>
+        <Box sx={{
+          display: 'flex', alignItems: 'center', gap: 2,
+          bgcolor: alpha('#0a2463', 0.04), borderRadius: 3, px: 2, py: 1,
+          border: '1px solid', borderColor: 'divider',
+        }}>
+          <FormControl size="small" sx={{ minWidth: 200, '& .MuiOutlinedInput-root': { borderRadius: 2, bgcolor: 'background.paper' } }}>
+            <InputLabel>Période</InputLabel>
+            <Select
+              value={periodFilter}
+              label="Période"
+              onChange={handlePeriodChange}
+            >
+              <MenuItem value="month">Ce mois</MenuItem>
+              <MenuItem value="quarter">3 derniers mois</MenuItem>
+              <MenuItem value="year">12 derniers mois</MenuItem>
+              <MenuItem value="custom">Plage personnalisée</MenuItem>
+            </Select>
+          </FormControl>
+          {periodFilter === 'custom' && (
+            <>
+              <DatePicker
+                label="Début"
+                value={customStart ? parseISO(customStart) : null}
+                onChange={(d: any) => { setCustomStart(d ? format(d, 'yyyy-MM-dd') : ''); setPage(1); }}
+                slotProps={{ textField: { size: 'small', sx: { '& .MuiOutlinedInput-root': { borderRadius: 2, bgcolor: 'background.paper' } } } }}
+              />
+              <DatePicker
+                label="Fin"
+                value={customEnd ? parseISO(customEnd) : null}
+                onChange={(d: any) => { setCustomEnd(d ? format(d, 'yyyy-MM-dd') : ''); setPage(1); }}
+                slotProps={{ textField: { size: 'small', sx: { '& .MuiOutlinedInput-root': { borderRadius: 2, bgcolor: 'background.paper' } } } }}
+              />
+            </>
+          )}
+        </Box>
       </Box>
 
       {/* KPI Cards */}
-      <Grid container spacing={3} mb={3}>
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card sx={{ 
-            background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
-            color: 'white',
-          }}>
-            <CardContent>
-              <Box display="flex" justifyContent="space-between" alignItems="flex-start">
-                <Box>
-                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                    Total Réservations
-                  </Typography>
-                  <Typography variant="h3" fontWeight={700} mt={1}>
-                    {stats.total}
-                  </Typography>
-                  <Box display="flex" alignItems="center" mt={1}>
-                    <TrendingUp fontSize="small" />
-                    <Typography variant="caption" ml={0.5}>
-                      Période sélectionnée
+      <Grid container spacing={2.5} mb={4}>
+        {[
+          { label: 'Total Réservations', value: stats.total, sub: 'Période sélectionnée', icon: <EventAvailable />, gradient: 'linear-gradient(135deg, #0a2463 0%, #1565c0 100%)', shadow: 'rgba(10, 36, 99, 0.3)' },
+          { label: 'Confirmées', value: stats.confirmed, sub: `${stats.tauxValidation}% taux de validation`, icon: <CheckCircle />, gradient: 'linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%)', shadow: 'rgba(46, 125, 50, 0.3)' },
+          { label: 'En Attente', value: stats.pending, sub: 'Nécessite validation', icon: <Pending />, gradient: 'linear-gradient(135deg, #ed6c02 0%, #e65100 100%)', shadow: 'rgba(230, 81, 0, 0.3)' },
+          { label: 'Rejetées', value: stats.rejected, sub: `${stats.tauxRejet}% taux de rejet`, icon: <Cancel />, gradient: 'linear-gradient(135deg, #d32f2f 0%, #c62828 100%)', shadow: 'rgba(198, 40, 40, 0.3)' },
+        ].map((kpi) => (
+          <Grid size={{ xs: 12, sm: 6, md: 3 }} key={kpi.label}>
+            <Card elevation={0} sx={{
+              background: kpi.gradient,
+              color: 'white',
+              borderRadius: 3,
+              position: 'relative',
+              overflow: 'hidden',
+              boxShadow: `0 8px 24px ${kpi.shadow}`,
+              transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+              '&:hover': { transform: 'translateY(-4px)', boxShadow: `0 12px 32px ${kpi.shadow}` },
+            }}>
+              {/* Decorative circle */}
+              <Box sx={{
+                position: 'absolute', top: -20, right: -20,
+                width: 100, height: 100, borderRadius: '50%',
+                bgcolor: 'rgba(255,255,255,0.08)',
+              }} />
+              <Box sx={{
+                position: 'absolute', bottom: -30, right: 30,
+                width: 70, height: 70, borderRadius: '50%',
+                bgcolor: 'rgba(255,255,255,0.05)',
+              }} />
+              <CardContent sx={{ position: 'relative', zIndex: 1 }}>
+                <Box display="flex" justifyContent="space-between" alignItems="flex-start">
+                  <Box>
+                    <Typography variant="body2" sx={{ opacity: 0.85, fontWeight: 500, letterSpacing: '0.02em' }}>
+                      {kpi.label}
+                    </Typography>
+                    <Typography variant="h3" sx={{ fontWeight: 800, mt: 0.5, lineHeight: 1.1 }}>
+                      {kpi.value}
+                    </Typography>
+                    <Typography variant="caption" sx={{ opacity: 0.75, mt: 1, display: 'block' }}>
+                      {kpi.sub}
                     </Typography>
                   </Box>
+                  <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(10px)', width: 52, height: 52 }}>
+                    {kpi.icon}
+                  </Avatar>
                 </Box>
-                <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 56, height: 56 }}>
-                  <EventAvailable />
-                </Avatar>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {}
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card sx={{ 
-            background: 'linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%)',
-            color: 'white',
-          }}>
-            <CardContent>
-              <Box display="flex" justifyContent="space-between" alignItems="flex-start">
-                <Box>
-                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                    Confirmées
-                  </Typography>
-                  <Typography variant="h3" fontWeight={700} mt={1}>
-                    {stats.confirmed}
-                  </Typography>
-                  <Box display="flex" alignItems="center" mt={1}>
-                    <Typography variant="caption">
-                      {stats.tauxValidation}% taux de validation
-                    </Typography>
-                  </Box>
-                </Box>
-                <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 56, height: 56 }}>
-                  <CheckCircle />
-                </Avatar>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {}
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card sx={{ 
-            background: 'linear-gradient(135deg, #ed6c02 0%, #e65100 100%)',
-            color: 'white',
-          }}>
-            <CardContent>
-              <Box display="flex" justifyContent="space-between" alignItems="flex-start">
-                <Box>
-                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                    En Attente
-                  </Typography>
-                  <Typography variant="h3" fontWeight={700} mt={1}>
-                    {stats.pending}
-                  </Typography>
-                  <Box display="flex" alignItems="center" mt={1}>
-                    <Typography variant="caption">
-                      Nécessite validation
-                    </Typography>
-                  </Box>
-                </Box>
-                <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 56, height: 56 }}>
-                  <Pending />
-                </Avatar>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {}
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card sx={{ 
-            background: 'linear-gradient(135deg, #d32f2f 0%, #c62828 100%)',
-            color: 'white',
-          }}>
-            <CardContent>
-              <Box display="flex" justifyContent="space-between" alignItems="flex-start">
-                <Box>
-                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                    Rejetées
-                  </Typography>
-                  <Typography variant="h3" fontWeight={700} mt={1}>
-                    {stats.rejected}
-                  </Typography>
-                  <Box display="flex" alignItems="center" mt={1}>
-                    <Typography variant="caption">
-                      {stats.tauxRejet}% taux de rejet
-                    </Typography>
-                  </Box>
-                </Box>
-                <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 56, height: 56 }}>
-                  <Cancel />
-                </Avatar>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
       </Grid>
 
       {/* Stats supplémentaires */}
-      <Grid container spacing={3} mb={3}>
-        {}
-        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-          <Card>
-            <CardContent>
-              <Box display="flex" alignItems="center" mb={2}>
-                <Avatar sx={{ bgcolor: '#1976d2', mr: 2 }}>
-                  <People />
-                </Avatar>
-                <Box>
-                  <Typography variant="h5" fontWeight={700}>
-                    {totalUsers}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Utilisateurs actifs
-                  </Typography>
+      <Grid container spacing={2.5} mb={4}>
+        {[
+          { label: 'Utilisateurs actifs', value: totalUsers, icon: <People />, color: '#1565c0', bg: alpha('#1565c0', 0.08) },
+          { label: 'Salles disponibles', value: rooms.length, icon: <MeetingRoom />, color: '#2e7d32', bg: alpha('#2e7d32', 0.08) },
+          { label: 'Réservations par salle', value: (stats.total / (rooms.length || 1)).toFixed(1), icon: <CalendarMonth />, color: '#ed6c02', bg: alpha('#ed6c02', 0.08) },
+        ].map((item) => (
+          <Grid size={{ xs: 12, sm: 6, md: 4 }} key={item.label}>
+            <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider', transition: 'border-color 0.2s', '&:hover': { borderColor: item.color } }}>
+              <CardContent sx={{ py: 2.5 }}>
+                <Box display="flex" alignItems="center" gap={2}>
+                  <Avatar sx={{ bgcolor: item.bg, color: item.color, width: 48, height: 48 }}>
+                    {item.icon}
+                  </Avatar>
+                  <Box>
+                    <Typography variant="h4" sx={{ fontWeight: 700, lineHeight: 1.1, color: item.color }}>
+                      {item.value}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
+                      {item.label}
+                    </Typography>
+                  </Box>
                 </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {}
-        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-          <Card>
-            <CardContent>
-              <Box display="flex" alignItems="center" mb={2}>
-                <Avatar sx={{ bgcolor: '#2e7d32', mr: 2 }}>
-                  <MeetingRoom />
-                </Avatar>
-                <Box>
-                  <Typography variant="h5" fontWeight={700}>
-                    {rooms.length}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Salles disponibles
-                  </Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {}
-        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-          <Card>
-            <CardContent>
-              <Box display="flex" alignItems="center" mb={2}>
-                <Avatar sx={{ bgcolor: '#ed6c02', mr: 2 }}>
-                  <CalendarMonth />
-                </Avatar>
-                <Box>
-                  <Typography variant="h5" fontWeight={700}>
-                    {(stats.total / (rooms.length || 1)).toFixed(1)}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Réservations par salle
-                  </Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
       </Grid>
 
       {/* Graphiques */}
-      <Grid container spacing={3} mb={3}>
+      <Grid container spacing={2.5} mb={4}>
         {/* Évolution des réservations */}
         {}
         <Grid size={{ xs: 12, lg: 8 }}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" fontWeight={600} mb={3}>
-              Évolution des réservations (30 derniers jours)
-            </Typography>
-            <ResponsiveContainer width="100%" height={300}>
+          <Paper elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider', overflow: 'hidden' }}>
+            <Box sx={{ px: 3, pt: 3, pb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <Box sx={{ width: 4, height: 28, borderRadius: 2, background: 'linear-gradient(180deg, #1565c0, #0a2463)' }} />
+                <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                  Évolution des réservations
+                </Typography>
+              </Box>
+              <Chip label="30 derniers jours" size="small" sx={{ bgcolor: alpha('#1565c0', 0.08), color: '#1565c0', fontWeight: 600, borderRadius: 2 }} />
+            </Box>
+            <Box sx={{ px: 3, pb: 3, pt: 1 }}>
+              <ResponsiveContainer width="100%" height={300}>
               <AreaChart data={stats.evolutionData}>
                 <defs>
                   <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
@@ -544,16 +504,21 @@ const Statistics: React.FC = () => {
                 <Area type="monotone" dataKey="confirmees" stroke="#2e7d32" fillOpacity={1} fill="url(#colorConfirm)" name="Confirmées" />
               </AreaChart>
             </ResponsiveContainer>
+            </Box>
           </Paper>
         </Grid>
 
         {/* Répartition par statut */}
         {}
         <Grid size={{ xs: 12, lg: 4 }}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" fontWeight={600} mb={3}>
-              Répartition par statut
-            </Typography>
+          <Paper elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider', overflow: 'hidden' }}>
+            <Box sx={{ px: 3, pt: 3, pb: 1, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <Box sx={{ width: 4, height: 28, borderRadius: 2, background: 'linear-gradient(180deg, #9c27b0, #6a1b9a)' }} />
+              <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                Répartition par statut
+              </Typography>
+            </Box>
+            <Box sx={{ px: 3, pb: 3, pt: 1 }}>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
@@ -573,16 +538,23 @@ const Statistics: React.FC = () => {
                 <Tooltip />
               </PieChart>
             </ResponsiveContainer>
+            </Box>
           </Paper>
         </Grid>
       </Grid>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onChange={handleTabChange} aria-label="Stat tabs" sx={{ mb: 2 }}>
-        <Tab label="Général" />
-        <Tab label="Par département" />
-        <Tab label="📊 Rapport Hebdo" sx={{ fontWeight: 'bold' }} />
-      </Tabs>
+      <Paper elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider', mb: 3, overflow: 'hidden' }}>
+        <Tabs value={activeTab} onChange={handleTabChange} aria-label="Stat tabs" sx={{
+          px: 2, bgcolor: alpha('#0a2463', 0.02),
+          '& .MuiTab-root': { textTransform: 'none', fontWeight: 600, minHeight: 52 },
+          '& .MuiTabs-indicator': { bgcolor: '#1565c0', height: 3, borderRadius: '3px 3px 0 0' },
+        }}>
+          <Tab label="Général" />
+          <Tab label="Par département" />
+          <Tab label="Rapport Hebdo" />
+        </Tabs>
+      </Paper>
 
       {/* Onglet Rapport Hebdomadaire */}
       {activeTab === 2 && (
@@ -594,7 +566,7 @@ const Statistics: React.FC = () => {
         {/* Show department tab only when selected */}
         {activeTab === 1 && (
           <Grid size={{ xs: 12, md: 12 }}>
-            <Paper sx={{ p: 2, mb: 2 }}>
+            <Paper elevation={0} sx={{ p: 2, mb: 2, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
               <Box display="flex" gap={2} alignItems="center" mb={2}>
                 <FormControl size="small" sx={{ minWidth: 180 }}>
                   <InputLabel>Période</InputLabel>
@@ -647,7 +619,7 @@ const Statistics: React.FC = () => {
 
               {deptStatsLoading ? (
                 <Box display="flex" justifyContent="center" alignItems="center" minHeight={150}>
-                  <CircularProgress />
+                  <Skeleton variant="rounded" height={120} sx={{ borderRadius: 3, width: '100%' }} />
                 </Box>
                   ) : (
                 <Box>
@@ -678,16 +650,16 @@ const Statistics: React.FC = () => {
                     <Box mt={2} mb={1} display="flex" justifyContent="space-between" alignItems="center">
                       <Typography variant="subtitle1">Détail départements</Typography>
                       <Stack direction="row" spacing={1}>
-                        <Button size="small" variant="outlined" onClick={() => exportCSV(((deptStatsData as any)?.data) || [])}>Exporter CSV</Button>
+                        <Button size="small" variant="outlined" onClick={() => exportCSV(((deptStatsData as any)?.data) || [])} sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}>Exporter CSV</Button>
                       </Stack>
                     </Box>
 
                     <Table size="small">
                       <TableHead>
                         <TableRow>
-                          <TableCell>#</TableCell>
-                          <TableCell>Département</TableCell>
-                          <TableCell align="right">Réservations</TableCell>
+                          <TableCell sx={{ bgcolor: alpha('#0a2463', 0.04), fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>#</TableCell>
+                          <TableCell sx={{ bgcolor: alpha('#0a2463', 0.04), fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Département</TableCell>
+                          <TableCell align="right" sx={{ bgcolor: alpha('#0a2463', 0.04), fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Réservations</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -721,10 +693,14 @@ const Statistics: React.FC = () => {
         {/* Salles les plus réservées */}
         {}
         <Grid size={{ xs: 12, md: 6 }}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" fontWeight={600} mb={3}>
-              Top 5 - Salles les plus réservées
-            </Typography>
+          <Paper elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider', overflow: 'hidden' }}>
+            <Box sx={{ px: 3, pt: 3, pb: 1, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <Box sx={{ width: 4, height: 28, borderRadius: 2, background: 'linear-gradient(180deg, #1565c0, #0a2463)' }} />
+              <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                Top 5 - Salles les plus réservées
+              </Typography>
+            </Box>
+            <Box sx={{ px: 3, pb: 3, pt: 1 }}>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={stats.topSalles} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" />
@@ -734,17 +710,21 @@ const Statistics: React.FC = () => {
                 <Bar dataKey="count" fill="#1976d2" name="Réservations" />
               </BarChart>
             </ResponsiveContainer>
+            </Box>
           </Paper>
         </Grid>
 
         {/* Départements les plus actifs */}
         {}
         <Grid size={{ xs: 12, md: 6 }}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" fontWeight={600} mb={2}>
-              Top 5 - Départements les plus actifs
-            </Typography>
-            <List>
+          <Paper elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider', overflow: 'hidden' }}>
+            <Box sx={{ px: 3, pt: 3, pb: 1, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <Box sx={{ width: 4, height: 28, borderRadius: 2, background: 'linear-gradient(180deg, #2e7d32, #1b5e20)' }} />
+              <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                Top 5 - Départements les plus actifs
+              </Typography>
+            </Box>
+            <List sx={{ px: 1 }}>
               {(((deptStatsData as any)?.data) || stats.topDepartments).slice(0, 5).map((dept: any, index: number) => {
                 // dept may be either { department_name, count } from server
                 // or { name, count } from local stats
@@ -763,9 +743,9 @@ const Statistics: React.FC = () => {
                     />
                     <Chip 
                       label={count} 
-                      color="primary" 
                       size="small"
-                      icon={<Star />}
+                      sx={{ bgcolor: alpha(COLORS[index % COLORS.length], 0.1), color: COLORS[index % COLORS.length], fontWeight: 700, borderRadius: 2 }}
+                      icon={<Star sx={{ color: `${COLORS[index % COLORS.length]} !important` }} />}
                     />
                   </ListItem>
                 );
@@ -776,14 +756,18 @@ const Statistics: React.FC = () => {
       </Grid>
 
       {/* Taux d'occupation des salles */}
-      <Paper sx={{ p: 3 }}>
-        <Typography variant="h6" fontWeight={600} mb={3}>
-          Taux d'occupation des salles
-        </Typography>
+      <Paper elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider', overflow: 'hidden' }}>
+        <Box sx={{ px: 3, pt: 3, pb: 1, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Box sx={{ width: 4, height: 28, borderRadius: 2, background: 'linear-gradient(180deg, #ed6c02, #e65100)' }} />
+          <Typography variant="h6" sx={{ fontWeight: 700 }}>
+            Taux d'occupation des salles
+          </Typography>
+        </Box>
+        <Box sx={{ p: 3 }}>
         <Grid container spacing={2}>
           {stats.roomOccupancy.map((room, index) => (
               <Grid size={{ xs: 12, sm: 6, md: 4 }} key={room.nom || index}>
-                <Box>
+                <Box sx={{ p: 2, borderRadius: 2, border: '1px solid', borderColor: 'divider', bgcolor: alpha('#0a2463', 0.01), transition: 'border-color 0.2s', '&:hover': { borderColor: parseFloat(room.taux) > 75 ? '#d32f2f' : parseFloat(room.taux) > 50 ? '#ed6c02' : '#2e7d32' } }}>
                   <Box display="flex" justifyContent="space-between" mb={1}>
                     <Typography variant="body2" fontWeight={600}>
                       {room.nom}
@@ -816,6 +800,7 @@ const Statistics: React.FC = () => {
               </Grid>
           ))}
         </Grid>
+        </Box>
       </Paper>
     </Box>
   );

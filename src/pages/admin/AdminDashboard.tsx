@@ -14,7 +14,7 @@ import {
   Box,
   Button,
   Chip,
-  CircularProgress,
+  Skeleton,
   Table,
   TableBody,
   TableCell,
@@ -25,6 +25,8 @@ import {
   DialogContent,
   DialogActions,
   TextField,
+  alpha,
+  Avatar,
 } from '@mui/material';
 import { formatDateTime, formatFullName } from '@/utils/formatters';
 import {
@@ -34,6 +36,7 @@ import {
   Pending as PendingIcon,
   CheckCircle as CheckIcon,
   Cancel as CancelIcon,
+  ArrowForward as ArrowForwardIcon,
 } from '@mui/icons-material';
 
 interface StatCard {
@@ -41,6 +44,7 @@ interface StatCard {
   value: number;
   icon: React.ReactElement;
   color: string;
+  bg: string;
   onClick?: () => void;
 }
 
@@ -96,18 +100,19 @@ const AdminDashboard: React.FC = () => {
     stats.push({
       title: 'Utilisateurs',
       value: users?.total || 0,
-      icon: <PeopleIcon sx={{ fontSize: 40 }} />,
-      color: '#1976d2',
+      icon: <PeopleIcon sx={{ fontSize: 32 }} />,
+      color: '#1565c0',
+      bg: '#e3f2fd',
       onClick: () => navigate('/admin/users'),
     });
   }
 
-  // Construire la carte Salles puis ajouter onClick seulement si admin
   const sallesCard: StatCard = {
     title: 'Salles',
     value: rooms?.length || 0,
-    icon: <RoomIcon sx={{ fontSize: 40 }} />,
+    icon: <RoomIcon sx={{ fontSize: 32 }} />,
     color: '#2e7d32',
+    bg: '#e8f5e9',
   };
   if (isAdmin) {
     sallesCard.onClick = () => navigate('/admin/rooms');
@@ -117,16 +122,18 @@ const AdminDashboard: React.FC = () => {
   stats.push({
     title: 'Réservations',
     value: reservations?.length || 0,
-    icon: <ReservationIcon sx={{ fontSize: 40 }} />,
-    color: '#ed6c02',
+    icon: <ReservationIcon sx={{ fontSize: 32 }} />,
+    color: '#e65100',
+    bg: '#fff3e0',
     onClick: () => navigate('/admin/reservations'),
   });
 
   stats.push({
     title: 'En Attente',
     value: pendingReservations.length,
-    icon: <PendingIcon sx={{ fontSize: 40 }} />,
-    color: '#d32f2f',
+    icon: <PendingIcon sx={{ fontSize: 32 }} />,
+    color: '#c62828',
+    bg: '#ffebee',
   });
 
   // Utiliser les helpers robustes de formatage
@@ -158,66 +165,143 @@ const AdminDashboard: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
-        <CircularProgress />
+      <Box sx={{ p: { xs: 2, md: 4 } }}>
+        <Skeleton variant="rounded" width={300} height={40} sx={{ mb: 1 }} />
+        <Skeleton variant="text" width={220} sx={{ mb: 4 }} />
+        <Box sx={{ display: 'flex', gap: 2.5, mb: 4, flexWrap: 'wrap' }}>
+          {[0,1,2,3].map(i => (
+            <Skeleton key={i} variant="rounded" sx={{ flex: '1 1 0', minWidth: 200, height: 100, borderRadius: 3 }} />
+          ))}
+        </Box>
+        <Skeleton variant="rounded" height={300} sx={{ borderRadius: 3, mb: 3 }} />
+        <Grid container spacing={3}>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Skeleton variant="rounded" height={250} sx={{ borderRadius: 3 }} />
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Skeleton variant="rounded" height={250} sx={{ borderRadius: 3 }} />
+          </Grid>
+        </Grid>
       </Box>
     );
   }
 
   return (
-    <Box>
-      <Typography variant="h4" gutterBottom>
-        Tableau de Bord
-      </Typography>
-      <Typography variant="h6" gutterBottom color="text.secondary">
-        Bienvenue, {user?.prenom} {user?.nom} !
-      </Typography>
+    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1400, mx: 'auto' }}>
+      {/* Header */}
+      <Box sx={{ mb: 4 }}>
+        <Typography
+          variant="h4"
+          sx={{ fontWeight: 800, color: 'text.primary', letterSpacing: '-0.02em' }}
+        >
+          Administration
+        </Typography>
+        <Typography variant="body1" color="text.secondary" sx={{ mt: 0.5 }}>
+          Bienvenue, {user?.prenom} {user?.nom}
+        </Typography>
+      </Box>
 
-      <Box sx={{ display: 'flex', gap: 3, mt: 3, flexWrap: 'wrap' }}>
+      {/* Stat Cards */}
+      <Box sx={{ display: 'flex', gap: 2.5, mb: 4, flexWrap: 'wrap' }}>
         {stats.map((stat, index) => (
           <Paper
             key={index}
+            elevation={0}
             sx={{
-              p: 4,
+              p: 3,
               flex: '1 1 0',
               minWidth: 200,
               display: 'flex',
-              flexDirection: 'column',
               alignItems: 'center',
-              bgcolor: stat.color,
-              color: 'white',
+              gap: 2.5,
               cursor: stat.onClick ? 'pointer' : 'default',
-              transition: 'transform 0.2s',
-              '&:hover': stat.onClick ? { transform: 'scale(1.02)' } : {},
-              minHeight: 180,
+              borderRadius: 3,
+              border: '1px solid',
+              borderColor: 'divider',
+              transition: 'all 0.25s ease',
+              '&:hover': stat.onClick ? {
+                transform: 'translateY(-3px)',
+                boxShadow: `0 8px 25px ${alpha(stat.color, 0.15)}`,
+                borderColor: alpha(stat.color, 0.3),
+              } : {},
             }}
             onClick={stat.onClick}
           >
-            <Box sx={{ mb: 1 }}>{stat.icon}</Box>
-            <Typography variant="h6">{stat.title}</Typography>
-            <Typography variant="h3" fontWeight="bold">
-              {stat.value}
-            </Typography>
+            <Box
+              sx={{
+                width: 56,
+                height: 56,
+                borderRadius: 2.5,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                bgcolor: stat.bg,
+                color: stat.color,
+                flexShrink: 0,
+              }}
+            >
+              {stat.icon}
+            </Box>
+            <Box>
+              <Typography variant="h4" sx={{ fontWeight: 700, color: stat.color, lineHeight: 1.1 }}>
+                {stat.value}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.3 }}>
+                {stat.title}
+              </Typography>
+            </Box>
           </Paper>
         ))}
       </Box>
 
-      <Paper sx={{ p: 3, mt: 3 }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-          <Typography variant="h6">
-            Réservations en Attente ({pendingReservations.length})
-          </Typography>
-          <Button size="small" onClick={() => navigate('/admin/reservations')}>
+      {/* Pending Reservations Table */}
+      <Paper
+        elevation={0}
+        sx={{
+          p: 3,
+          mb: 3,
+          borderRadius: 3,
+          border: '1px solid',
+          borderColor: 'divider',
+        }}
+      >
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2.5}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Typography variant="h6" sx={{ fontWeight: 700 }}>
+              Réservations en Attente
+            </Typography>
+            {pendingReservations.length > 0 && (
+              <Chip
+                label={pendingReservations.length}
+                size="small"
+                sx={{
+                  bgcolor: '#ffebee',
+                  color: '#c62828',
+                  fontWeight: 700,
+                  height: 24,
+                }}
+              />
+            )}
+          </Box>
+          <Button
+            size="small"
+            endIcon={<ArrowForwardIcon sx={{ fontSize: 16 }} />}
+            onClick={() => navigate('/admin/reservations')}
+            sx={{ textTransform: 'none', fontWeight: 600 }}
+          >
             Voir tout
           </Button>
         </Box>
 
         {pendingReservations.length === 0 ? (
-          <Typography color="text.secondary" textAlign="center" py={3}>
-            Aucune réservation en attente
-          </Typography>
+          <Box sx={{ textAlign: 'center', py: 5 }}>
+            <CheckIcon sx={{ fontSize: 48, color: 'success.light', mb: 1 }} />
+            <Typography color="text.secondary">
+              Aucune réservation en attente
+            </Typography>
+          </Box>
         ) : (
-          <Table size="small">
+          <Table size="small" sx={{ '& .MuiTableCell-head': { fontWeight: 700, color: 'text.secondary', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' } }}>
             <TableHead>
               <TableRow>
                 <TableCell>Utilisateur</TableCell>
@@ -270,19 +354,22 @@ const AdminDashboard: React.FC = () => {
                       <Button
                         size="small"
                         color="success"
+                        variant="outlined"
                         startIcon={<CheckIcon />}
                         onClick={() => validateReservation.mutate(reservation.id)}
                         disabled={validateReservation.isPending}
-                        sx={{ mr: 1 }}
+                        sx={{ mr: 1, borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
                       >
                         Valider
                       </Button>
                       <Button
                         size="small"
                         color="error"
+                        variant="outlined"
                         startIcon={<CancelIcon />}
                         onClick={() => handleReject(reservation)}
                         disabled={rejectReservation.isPending}
+                        sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
                       >
                         Refuser
                       </Button>
@@ -295,20 +382,80 @@ const AdminDashboard: React.FC = () => {
         )}
       </Paper>
 
-      <Grid container spacing={3} sx={{ mt: 1 }}>
+      <Grid container spacing={3} sx={{ mt: 0.5 }}>
         {isAdmin && (
           <Grid size={{ xs: 12, md: 6 }}>
-            <Paper sx={{ p: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                Derniers Utilisateurs
-              </Typography>
+            <Paper
+              elevation={0}
+              sx={{
+                p: 3,
+                borderRadius: 3,
+                border: '1px solid',
+                borderColor: 'divider',
+                height: '100%',
+              }}
+            >
+              <Box display="flex" justifyContent="space-between" alignItems="center" mb={2.5}>
+                <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                  Derniers Utilisateurs
+                </Typography>
+                <Button
+                  size="small"
+                  endIcon={<ArrowForwardIcon sx={{ fontSize: 16 }} />}
+                  onClick={() => navigate('/admin/users')}
+                  sx={{ textTransform: 'none', fontWeight: 600 }}
+                >
+                  Gérer
+                </Button>
+              </Box>
               {users?.utilisateurs?.slice(0, 5).map((u: User) => (
-                <Box key={u.id} display="flex" justifyContent="space-between" alignItems="center" py={1} borderBottom="1px solid #eee">
-                  <Box>
-                    <Typography variant="subtitle2">{u.prenom} {u.nom}</Typography>
-                    <Typography variant="caption" color="text.secondary">{u.email}</Typography>
+                <Box
+                  key={u.id}
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    py: 1.5,
+                    borderBottom: '1px solid',
+                    borderColor: 'divider',
+                    '&:last-child': { borderBottom: 'none' },
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <Avatar
+                      sx={{
+                        width: 36,
+                        height: 36,
+                        bgcolor: alpha('#1565c0', 0.1),
+                        color: '#1565c0',
+                        fontSize: '0.85rem',
+                        fontWeight: 700,
+                      }}
+                    >
+                      {(u.prenom?.[0] || '').toUpperCase()}{(u.nom?.[0] || '').toUpperCase()}
+                    </Avatar>
+                    <Box>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                        {u.prenom} {u.nom}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">{u.email}</Typography>
+                    </Box>
                   </Box>
-                  <Chip label={u.role} size="small" color={u.role === 'admin' ? 'primary' : 'default'} />
+                  <Chip
+                    label={u.role}
+                    size="small"
+                    sx={{
+                      fontWeight: 600,
+                      borderRadius: 2,
+                      ...(u.role === 'admin' ? {
+                        bgcolor: '#e3f2fd',
+                        color: '#1565c0',
+                      } : u.role === 'responsable' ? {
+                        bgcolor: '#fff3e0',
+                        color: '#e65100',
+                      } : {}),
+                    }}
+                  />
                 </Box>
               ))}
             </Paper>
@@ -316,39 +463,103 @@ const AdminDashboard: React.FC = () => {
         )}
 
         <Grid size={{ xs: 12, md: 6 }}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Salles
-            </Typography>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 3,
+              borderRadius: 3,
+              border: '1px solid',
+              borderColor: 'divider',
+              height: '100%',
+            }}
+          >
+            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2.5}>
+              <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                Salles
+              </Typography>
+              {isAdmin && (
+                <Button
+                  size="small"
+                  endIcon={<ArrowForwardIcon sx={{ fontSize: 16 }} />}
+                  onClick={() => navigate('/admin/rooms')}
+                  sx={{ textTransform: 'none', fontWeight: 600 }}
+                >
+                  Gérer
+                </Button>
+              )}
+            </Box>
             {rooms?.slice(0, 5).map((room) => {
               const isOccupiedNow = occupiedRooms.has(room.id);
               return (
-              <Box key={room.id} display="flex" justifyContent="space-between" alignItems="center" py={1} borderBottom="1px solid #eee">
-                <Box>
-                  <Typography variant="subtitle2">{room.nom}</Typography>
-                  <Typography variant="caption" color="text.secondary">Capacité: {room.capacite}</Typography>
+                <Box
+                  key={room.id}
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    py: 1.5,
+                    borderBottom: '1px solid',
+                    borderColor: 'divider',
+                    '&:last-child': { borderBottom: 'none' },
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <Box
+                      sx={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: 2,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        bgcolor: isOccupiedNow ? '#ffebee' : '#e8f5e9',
+                        color: isOccupiedNow ? '#c62828' : '#2e7d32',
+                      }}
+                    >
+                      <RoomIcon sx={{ fontSize: 20 }} />
+                    </Box>
+                    <Box>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>{room.nom}</Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Capacité: {room.capacite}
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <Chip
+                    label={isOccupiedNow ? 'Occupée' : 'Disponible'}
+                    size="small"
+                    sx={{
+                      fontWeight: 600,
+                      borderRadius: 2,
+                      ...(isOccupiedNow ? {
+                        bgcolor: '#ffebee',
+                        color: '#c62828',
+                      } : {
+                        bgcolor: '#e8f5e9',
+                        color: '#2e7d32',
+                      }),
+                    }}
+                  />
                 </Box>
-                <Chip 
-                  label={isOccupiedNow ? 'Occupée' : 'Disponible'} 
-                  size="small" 
-                  color={isOccupiedNow ? 'error' : 'success'} 
-                />
-              </Box>
-            );})}
+              );
+            })}
           </Paper>
         </Grid>
       </Grid>
 
-      <Dialog 
-        open={openRejectDialog} 
+      <Dialog
+        open={openRejectDialog}
         onClose={() => {
           setOpenRejectDialog(false);
           setRejectionReason('');
         }}
         maxWidth="sm"
         fullWidth
+        PaperProps={{
+          sx: { borderRadius: 3, p: 1 },
+        }}
       >
-        <DialogTitle>Refuser la réservation</DialogTitle>
+        <DialogTitle sx={{ fontWeight: 700 }}>Refuser la réservation</DialogTitle>
         <DialogContent>
           <Typography sx={{ mb: 2 }}>
             Réservation #{selectedReservation?.id}
@@ -375,11 +586,14 @@ const AdminDashboard: React.FC = () => {
             helperText="Le motif du refus est obligatoire"
           />
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => {
-            setOpenRejectDialog(false);
-            setRejectionReason('');
-          }}>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            onClick={() => {
+              setOpenRejectDialog(false);
+              setRejectionReason('');
+            }}
+            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
+          >
             Annuler
           </Button>
           <Button
@@ -387,6 +601,7 @@ const AdminDashboard: React.FC = () => {
             variant="contained"
             onClick={confirmReject}
             disabled={rejectReservation.isPending || !rejectionReason.trim()}
+            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
           >
             {rejectReservation.isPending ? 'Refus en cours...' : 'Confirmer le refus'}
           </Button>

@@ -19,7 +19,6 @@ import {
   ListItemAvatar,
   ListItemText,
   Alert,
-  CircularProgress,
   FormControl,
   InputLabel,
   Select,
@@ -28,6 +27,7 @@ import {
   Tooltip,
   Paper,
   InputAdornment,
+  Skeleton,
 } from '@mui/material';
 import {
   BugReport as BugIcon,
@@ -199,8 +199,21 @@ const SupportTickets: React.FC = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <CircularProgress />
+      <Box sx={{ p: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Box>
+            <Skeleton variant="text" width={280} height={42} />
+            <Skeleton variant="text" width={320} height={24} />
+          </Box>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Skeleton variant="rounded" width={120} height={32} sx={{ borderRadius: 2 }} />
+            <Skeleton variant="rounded" width={100} height={32} sx={{ borderRadius: 2 }} />
+          </Box>
+        </Box>
+        <Skeleton variant="rounded" height={56} sx={{ borderRadius: 3, mb: 3 }} />
+        {[1, 2, 3, 4].map((i) => (
+          <Skeleton key={i} variant="rounded" height={80} sx={{ borderRadius: 3, mb: 1 }} />
+        ))}
       </Box>
     );
   }
@@ -210,7 +223,7 @@ const SupportTickets: React.FC = () => {
       {/* En-tête */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Box>
-          <Typography variant="h4" fontWeight="bold" gutterBottom>
+          <Typography variant="h4" sx={{ fontWeight: 800, letterSpacing: '-0.02em' }} gutterBottom>
             Signalements & Support
           </Typography>
           <Typography color="text.secondary">
@@ -251,7 +264,7 @@ const SupportTickets: React.FC = () => {
       )}
 
       {/* Filtres */}
-      <Paper sx={{ p: 2, mb: 3 }}>
+      <Paper elevation={0} sx={{ p: 2, mb: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
         <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
           <TextField
             placeholder="Rechercher..."
@@ -301,7 +314,7 @@ const SupportTickets: React.FC = () => {
 
       {/* Liste des tickets */}
       {filteredTickets.length === 0 ? (
-        <Card>
+        <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
           <CardContent sx={{ textAlign: 'center', py: 6 }}>
             <BugIcon sx={{ fontSize: 60, color: 'text.disabled', mb: 2 }} />
             <Typography variant="h6" color="text.secondary">
@@ -313,7 +326,7 @@ const SupportTickets: React.FC = () => {
           </CardContent>
         </Card>
       ) : (
-        <List sx={{ bgcolor: 'background.paper', borderRadius: 2 }}>
+        <List sx={{ bgcolor: 'background.paper', borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
           {filteredTickets.map((ticket, index) => {
             const category = categoryConfig[ticket.category] ?? { icon: <QuestionIcon />, color: '#607d8b', label: 'Général' };
             const priority = priorityConfig[ticket.priority] ?? { color: 'info' as const, label: 'Normale' };
@@ -411,6 +424,7 @@ const SupportTickets: React.FC = () => {
         }}
         maxWidth="md"
         fullWidth
+        PaperProps={{ sx: { borderRadius: 3, p: 1 } }}
       >
         {selectedTicket && (
           <>
@@ -487,12 +501,13 @@ const SupportTickets: React.FC = () => {
               />
             </DialogContent>
             <DialogActions>
-              <Button onClick={() => setReplyDialogOpen(false)}>Fermer</Button>
+              <Button onClick={() => setReplyDialogOpen(false)} sx={{ borderRadius: 2, textTransform: 'none' }}>Fermer</Button>
               <Button
                 variant="contained"
                 startIcon={<SendIcon />}
                 onClick={handleReply}
                 disabled={!replyMessage.trim() || submitting}
+                sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600, background: 'linear-gradient(135deg, #0a2463 0%, #1565c0 100%)', '&:hover': { background: 'linear-gradient(135deg, #0a2463 0%, #1565c0 100%)' } }}
               >
                 {submitting ? 'Envoi...' : 'Envoyer la réponse'}
               </Button>

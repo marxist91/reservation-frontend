@@ -24,6 +24,7 @@ import {
   Skeleton,
   Alert,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import {
   People as PeopleIcon,
   LocationOn as LocationIcon,
@@ -161,12 +162,18 @@ const RoomDetails: React.FC = () => {
   if (error || !room) {
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Alert severity="error" sx={{ mb: 2 }}>
-          Salle non trouvée ou erreur de chargement
-        </Alert>
-        <Button startIcon={<BackIcon />} onClick={() => navigate(-1)}>
-          Retour
-        </Button>
+        <Paper elevation={0} sx={{ p: 4, borderRadius: 3, border: '1px solid', borderColor: 'divider', textAlign: 'center' }}>
+          <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
+            Salle non trouvée ou erreur de chargement
+          </Alert>
+          <Button
+            startIcon={<BackIcon />}
+            onClick={() => navigate(-1)}
+            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
+          >
+            Retour
+          </Button>
+        </Paper>
       </Container>
     );
   }
@@ -180,7 +187,7 @@ const RoomDetails: React.FC = () => {
     : defaultImages[(room.id || 0) % defaultImages.length];
 
   return (
-    <Box sx={{ bgcolor: '#f8fafc', minHeight: '100vh', pb: 4 }}>
+    <Box sx={{ bgcolor: (theme) => alpha(theme.palette.primary.main, 0.02), minHeight: '100vh', pb: 4 }}>
       {/* Breadcrumb */}
       <Container maxWidth="lg" sx={{ pt: 2 }}>
         <Breadcrumbs separator={<NavigateNextIcon fontSize="small" />} sx={{ mb: 2 }}>
@@ -233,8 +240,9 @@ const RoomDetails: React.FC = () => {
               position: 'absolute',
               top: 16,
               left: 16,
-              bgcolor: 'white',
-              '&:hover': { bgcolor: '#f5f5f5' },
+              bgcolor: 'rgba(255,255,255,0.9)',
+              backdropFilter: 'blur(8px)',
+              '&:hover': { bgcolor: 'white' },
             }}
           >
             <BackIcon />
@@ -262,7 +270,7 @@ const RoomDetails: React.FC = () => {
               color: 'white',
             }}
           >
-            <Typography variant="h4" fontWeight={700} gutterBottom>
+            <Typography variant="h4" sx={{ fontWeight: 800, letterSpacing: '-0.02em' }} gutterBottom>
               {room.nom}
             </Typography>
             <Box display="flex" alignItems="center" gap={2} flexWrap="wrap">
@@ -297,8 +305,8 @@ const RoomDetails: React.FC = () => {
           {/* Colonne gauche - Détails */}
           <Grid size={{ xs: 12, md: 8 }}>
             {/* Description */}
-            <Paper sx={{ p: 3, borderRadius: 2, mb: 3 }}>
-              <Typography variant="h6" fontWeight={600} gutterBottom>
+            <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider', mb: 3 }}>
+              <Typography variant="h6" sx={{ fontWeight: 700 }} gutterBottom>
                 Description
               </Typography>
               <Typography color="text.secondary" lineHeight={1.8}>
@@ -307,8 +315,8 @@ const RoomDetails: React.FC = () => {
             </Paper>
 
             {/* Équipements */}
-            <Paper sx={{ p: 3, borderRadius: 2, mb: 3 }}>
-              <Typography variant="h6" fontWeight={600} gutterBottom>
+            <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider', mb: 3 }}>
+              <Typography variant="h6" sx={{ fontWeight: 700 }} gutterBottom>
                 Équipements disponibles
               </Typography>
               {equipements.length > 0 ? (
@@ -321,11 +329,13 @@ const RoomDetails: React.FC = () => {
                           alignItems: 'center',
                           gap: 1.5,
                           p: 1.5,
-                          bgcolor: '#f8fafc',
+                          bgcolor: alpha('#1565c0', 0.06),
                           borderRadius: 2,
+                          transition: 'background-color 0.2s',
+                          '&:hover': { bgcolor: alpha('#1565c0', 0.1) },
                         }}
                       >
-                        <Box sx={{ color: 'primary.main' }}>
+                        <Box sx={{ color: '#1565c0' }}>
                           {getEquipementIcon(equip)}
                         </Box>
                         <Typography variant="body2">{equip}</Typography>
@@ -341,8 +351,8 @@ const RoomDetails: React.FC = () => {
             </Paper>
 
             {/* Informations détaillées */}
-            <Paper sx={{ p: 3, borderRadius: 2 }}>
-              <Typography variant="h6" fontWeight={600} gutterBottom>
+            <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
+              <Typography variant="h6" sx={{ fontWeight: 700 }} gutterBottom>
                 Informations détaillées
               </Typography>
               <List>
@@ -397,9 +407,12 @@ const RoomDetails: React.FC = () => {
           <Grid size={{ xs: 12, md: 4 }}>
             {/* Card de réservation */}
             <Paper
+              elevation={0}
               sx={{
                 p: 3,
-                borderRadius: 2,
+                borderRadius: 3,
+                border: '1px solid',
+                borderColor: 'divider',
                 position: 'sticky',
                 top: 100,
               }}
@@ -436,6 +449,13 @@ const RoomDetails: React.FC = () => {
                     borderRadius: 2,
                     fontWeight: 600,
                     fontSize: '1rem',
+                    textTransform: 'none',
+                    background: 'linear-gradient(135deg, #0a2463 0%, #1565c0 100%)',
+                    boxShadow: `0 4px 14px ${alpha('#0a2463', 0.3)}`,
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #0a2463 0%, #1565c0 100%)',
+                      boxShadow: `0 6px 20px ${alpha('#0a2463', 0.4)}`,
+                    },
                   }}
                 >
                   Réserver cette salle
@@ -446,7 +466,7 @@ const RoomDetails: React.FC = () => {
                   size="large"
                   fullWidth
                   disabled
-                  sx={{ py: 1.5, borderRadius: 2 }}
+                  sx={{ py: 1.5, borderRadius: 2, textTransform: 'none' }}
                 >
                   Non disponible
                 </Button>

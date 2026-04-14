@@ -19,13 +19,15 @@ import {
   InputAdornment,
   Alert,
   Grid,
-  CircularProgress,
+  Skeleton,
   Chip,
   Paper,
   TablePagination,
+  alpha,
 } from '@mui/material';
 import {
   Search as SearchIcon,
+  MeetingRoom as RoomIcon,
 } from '@mui/icons-material';
 
 const SearchRooms: React.FC = () => {
@@ -118,24 +120,33 @@ const SearchRooms: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
-        <CircularProgress />
+      <Box sx={{ p: { xs: 2, md: 4 } }}>
+        <Skeleton variant="rounded" width={200} height={40} sx={{ mb: 1 }} />
+        <Skeleton variant="text" width={180} sx={{ mb: 3 }} />
+        <Skeleton variant="rounded" height={120} sx={{ borderRadius: 3, mb: 3 }} />
+        <Grid container spacing={2}>
+          {[0,1,2,3,4,5,6,7].map(i => (
+            <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={i}>
+              <Skeleton variant="rounded" height={220} sx={{ borderRadius: 3 }} />
+            </Grid>
+          ))}
+        </Grid>
       </Box>
     );
   }
 
   return (
-    <Box>
+    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1400, mx: 'auto' }}>
       <Box mb={3}>
-        <Typography variant="h4" fontWeight={700} gutterBottom>
+        <Typography variant="h4" sx={{ fontWeight: 800, letterSpacing: '-0.02em' }}>
           Nos Salles
         </Typography>
-        <Typography variant="body1" color="text.secondary">
+        <Typography variant="body1" color="text.secondary" sx={{ mt: 0.5 }}>
           {availableCount} salle{availableCount > 1 ? 's' : ''} disponible{availableCount > 1 ? 's' : ''} sur {rooms?.length || 0}
         </Typography>
       </Box>
 
-      <Paper sx={{ p: 2, mb: 3, borderRadius: 2 }}>
+      <Paper elevation={0} sx={{ p: 2.5, mb: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
         {/* Sélecteurs date / heure / durée */}
         <Box display="flex" gap={2} alignItems="center" mb={2} flexWrap="wrap">
           <TextField
@@ -193,7 +204,16 @@ const SearchRooms: React.FC = () => {
                 </InputAdornment>
               ),
             }}
-            sx={{ minWidth: 250, flexGrow: 1, maxWidth: 400 }}
+            sx={{
+              minWidth: 250,
+              flexGrow: 1,
+              maxWidth: 400,
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 2.5,
+                '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#90caf9' },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#1565c0' },
+              },
+            }}
           />
           
           <FormControl size="small" sx={{ minWidth: 150 }}>
@@ -215,16 +235,24 @@ const SearchRooms: React.FC = () => {
             <Chip
               label="Toutes"
               variant={statusFilter === 'all' ? 'filled' : 'outlined'}
-              color={statusFilter === 'all' ? 'primary' : 'default'}
               onClick={() => setStatusFilter('all')}
-              sx={{ cursor: 'pointer' }}
+              sx={{
+                cursor: 'pointer',
+                fontWeight: 600,
+                borderRadius: 2,
+                ...(statusFilter === 'all' ? { bgcolor: '#1565c0', color: '#fff' } : {}),
+              }}
             />
             <Chip
               label="Disponibles"
               variant={statusFilter === 'disponible' ? 'filled' : 'outlined'}
-              color={statusFilter === 'disponible' ? 'success' : 'default'}
               onClick={() => setStatusFilter('disponible')}
-              sx={{ cursor: 'pointer' }}
+              sx={{
+                cursor: 'pointer',
+                fontWeight: 600,
+                borderRadius: 2,
+                ...(statusFilter === 'disponible' ? { bgcolor: '#2e7d32', color: '#fff' } : {}),
+              }}
             />
           </Box>
         </Box>
@@ -235,9 +263,10 @@ const SearchRooms: React.FC = () => {
           Erreur lors du chargement des salles
         </Alert>
       ) : filteredRooms.length === 0 ? (
-        <Alert severity="info" sx={{ borderRadius: 2 }}>
-          Aucune salle trouvée avec ces critères.
-        </Alert>
+        <Paper elevation={0} sx={{ p: 5, textAlign: 'center', borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
+          <RoomIcon sx={{ fontSize: 56, color: 'text.disabled', mb: 1.5 }} />
+          <Typography color="text.secondary">Aucune salle trouvée avec ces critères.</Typography>
+        </Paper>
       ) : (
         <>
           <Grid container spacing={2}>

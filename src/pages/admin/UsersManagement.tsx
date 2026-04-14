@@ -24,7 +24,7 @@ import {
   MenuItem,
   Chip,
   Box,
-  CircularProgress,
+  Skeleton,
   Alert,
   Tooltip,
   InputAdornment,
@@ -38,6 +38,7 @@ import {
   Block as BlockIcon,
   CheckCircle as CheckCircleIcon,
 } from '@mui/icons-material';
+import { alpha } from '@mui/material/styles';
 
 interface UserFormData {
   nom: string;
@@ -204,8 +205,12 @@ const UsersManagement: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <CircularProgress />
+      <Box sx={{ width: '100%' }}>
+        <Skeleton variant="text" width={300} height={48} sx={{ mb: 3 }} />
+        <Skeleton variant="rectangular" height={56} sx={{ borderRadius: 2, mb: 3 }} />
+        {[1, 2, 3, 4, 5].map(i => (
+          <Skeleton key={i} variant="rectangular" height={52} sx={{ borderRadius: 1, mb: 1 }} />
+        ))}
       </Box>
     );
   }
@@ -213,7 +218,7 @@ const UsersManagement: React.FC = () => {
   if (error) {
     return (
       <Box sx={{ p: 3 }}>
-        <Alert severity="error">Erreur lors du chargement des utilisateurs</Alert>
+        <Alert severity="error" sx={{ borderRadius: 2 }}>Erreur lors du chargement des utilisateurs</Alert>
       </Box>
     );
   }
@@ -221,17 +226,24 @@ const UsersManagement: React.FC = () => {
   return (
     <Box sx={{ width: '100%' }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4">Gestion des Utilisateurs</Typography>
+        <Typography variant="h4" sx={{ fontWeight: 800, letterSpacing: '-0.02em' }}>Gestion des Utilisateurs</Typography>
         <Button
           variant="contained"
           startIcon={<PersonAddIcon />}
           onClick={() => handleOpenDialog()}
+          sx={{
+            borderRadius: 2,
+            textTransform: 'none',
+            fontWeight: 600,
+            background: 'linear-gradient(135deg, #0a2463 0%, #1565c0 100%)',
+            '&:hover': { background: 'linear-gradient(135deg, #0a2463 0%, #1565c0 100%)' },
+          }}
         >
           Nouvel Utilisateur
         </Button>
       </Box>
 
-      <Paper sx={{ p: 2, mb: 3 }}>
+      <Paper elevation={0} sx={{ p: 2, mb: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
         <TextField
           fullWidth
           placeholder="Rechercher un utilisateur..."
@@ -247,20 +259,21 @@ const UsersManagement: React.FC = () => {
               </InputAdornment>
             ),
           }}
+          sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2.5 } }}
         />
       </Paper>
 
-      <TableContainer component={Paper}>
+      <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
         <Table>
           <TableHead>
-            <TableRow sx={{ backgroundColor: 'primary.main' }}>
-              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>ID</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Nom</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Prénom</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Email</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Rôle</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Date création</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 'bold' }} align="center">Actions</TableCell>
+            <TableRow>
+              <TableCell sx={{ bgcolor: alpha('#0a2463', 0.04), fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em' }}>ID</TableCell>
+              <TableCell sx={{ bgcolor: alpha('#0a2463', 0.04), fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em' }}>Nom</TableCell>
+              <TableCell sx={{ bgcolor: alpha('#0a2463', 0.04), fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em' }}>Prénom</TableCell>
+              <TableCell sx={{ bgcolor: alpha('#0a2463', 0.04), fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em' }}>Email</TableCell>
+              <TableCell sx={{ bgcolor: alpha('#0a2463', 0.04), fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em' }}>Rôle</TableCell>
+              <TableCell sx={{ bgcolor: alpha('#0a2463', 0.04), fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em' }}>Date création</TableCell>
+              <TableCell sx={{ bgcolor: alpha('#0a2463', 0.04), fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em' }} align="center">Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -334,9 +347,9 @@ const UsersManagement: React.FC = () => {
         />
       </TableContainer>
 
-      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
+      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3, p: 1 } }}>
         <form onSubmit={handleSubmit}>
-          <DialogTitle>
+          <DialogTitle sx={{ fontWeight: 700 }}>
             {selectedUser ? 'Modifier l\'utilisateur' : 'Nouvel utilisateur'}
           </DialogTitle>
           <DialogContent>
@@ -386,11 +399,12 @@ const UsersManagement: React.FC = () => {
             </Box>
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleCloseDialog}>Annuler</Button>
+            <Button onClick={handleCloseDialog} sx={{ borderRadius: 2, textTransform: 'none' }}>Annuler</Button>
             <Button
               type="submit"
               variant="contained"
               disabled={createMutation.isPending || updateUser.isPending}
+              sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600, background: 'linear-gradient(135deg, #0a2463 0%, #1565c0 100%)', '&:hover': { background: 'linear-gradient(135deg, #0a2463 0%, #1565c0 100%)' } }}
             >
               {createMutation.isPending || updateUser.isPending
                 ? 'Enregistrement...'
@@ -402,8 +416,8 @@ const UsersManagement: React.FC = () => {
         </form>
       </Dialog>
 
-      <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
-        <DialogTitle>Confirmer la suppression</DialogTitle>
+      <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)} PaperProps={{ sx: { borderRadius: 3, p: 1 } }}>
+        <DialogTitle sx={{ fontWeight: 700 }}>Confirmer la suppression</DialogTitle>
         <DialogContent>
           <Typography>
             Êtes-vous sûr de vouloir supprimer l'utilisateur{' '}
@@ -414,12 +428,13 @@ const UsersManagement: React.FC = () => {
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDeleteDialog(false)}>Annuler</Button>
+          <Button onClick={() => setOpenDeleteDialog(false)} sx={{ borderRadius: 2, textTransform: 'none' }}>Annuler</Button>
           <Button
             color="error"
             variant="contained"
             onClick={confirmDelete}
             disabled={deleteUser.isPending}
+            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
           >
             {deleteUser.isPending ? 'Suppression...' : 'Supprimer'}
           </Button>

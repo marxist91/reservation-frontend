@@ -18,6 +18,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  alpha,
 } from '@mui/material';
 import {
   CheckCircle as CheckCircleIcon,
@@ -118,14 +119,14 @@ const Notifications: React.FC = () => {
   ];
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1200, mx: 'auto' }}>
       {/* En-tête */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} flexWrap="wrap" gap={2}>
         <Box>
-          <Typography variant="h4" fontWeight="bold" gutterBottom>
+          <Typography variant="h4" sx={{ fontWeight: 800, letterSpacing: '-0.02em' }}>
             Mes Notifications
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body1" color="text.secondary" sx={{ mt: 0.5 }}>
             {personalUnreadCount > 0 ? `${personalUnreadCount} notification${personalUnreadCount > 1 ? 's' : ''} non lue${personalUnreadCount > 1 ? 's' : ''}` : 'Toutes vos notifications sont lues'}
           </Typography>
         </Box>
@@ -135,6 +136,7 @@ const Notifications: React.FC = () => {
               variant="outlined"
               startIcon={<DoneAllIcon />}
               onClick={markAllAsRead}
+              sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
             >
               Tout marquer comme lu
             </Button>
@@ -144,6 +146,7 @@ const Notifications: React.FC = () => {
               variant="outlined"
               color="error"
               onClick={clearRead}
+              sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
             >
               Effacer les lues
             </Button>
@@ -151,12 +154,18 @@ const Notifications: React.FC = () => {
         </Box>
       </Box>
 
-      <Paper sx={{ mb: 3 }}>
+      <Paper elevation={0} sx={{ mb: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider', overflow: 'hidden' }}>
         {/* Onglets */}
         <Tabs
           value={tabValue}
           onChange={(_e, newValue) => setTabValue(newValue)}
-          sx={{ borderBottom: 1, borderColor: 'divider' }}
+          sx={{
+            borderBottom: 1,
+            borderColor: 'divider',
+            '& .MuiTab-root': { textTransform: 'none', fontWeight: 600, minHeight: 48 },
+            '& .Mui-selected': { color: '#1565c0' },
+            '& .MuiTabs-indicator': { bgcolor: '#1565c0', height: 3, borderRadius: '3px 3px 0 0' },
+          }}
         >
           <Tab
             label={
@@ -198,16 +207,16 @@ const Notifications: React.FC = () => {
         {filteredNotifications.length === 0 ? (
           <Box
             sx={{
-              p: 8,
+              p: 6,
               textAlign: 'center',
               color: 'text.secondary',
             }}
           >
-            <NotificationsIcon sx={{ fontSize: 100, opacity: 0.2, mb: 2 }} />
-            <Typography variant="h6" gutterBottom>
+            <NotificationsIcon sx={{ fontSize: 64, opacity: 0.15, mb: 1.5 }} />
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
               Aucune notification
             </Typography>
-            <Typography variant="body2">
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
               {tabValue === 1 ? 'Vous n\'avez aucune notification non lue' : 'Vous n\'avez aucune notification'}
             </Typography>
           </Box>
@@ -221,13 +230,14 @@ const Notifications: React.FC = () => {
                   sx={{
                     py: 2.5,
                     px: 3,
-                    bgcolor: notification.read ? 'transparent' : 'action.hover',
+                    bgcolor: notification.read ? 'transparent' : alpha('#1565c0', 0.04),
                     cursor: 'pointer',
+                    transition: 'background-color 0.2s ease',
                     '&:hover': {
-                      bgcolor: notification.read ? 'action.hover' : 'action.selected',
+                      bgcolor: notification.read ? 'action.hover' : alpha('#1565c0', 0.08),
                     },
-                    borderLeft: notification.read ? 'none' : '5px solid',
-                    borderLeftColor: 'primary.main',
+                    borderLeft: notification.read ? 'none' : '4px solid',
+                    borderLeftColor: '#1565c0',
                   }}
                 >
                   <ListItemIcon sx={{ minWidth: 50 }}>
@@ -307,6 +317,7 @@ const Notifications: React.FC = () => {
             color="error"
             onClick={clearAll}
             startIcon={<DeleteIcon />}
+            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
           >
             Supprimer toutes les notifications
           </Button>

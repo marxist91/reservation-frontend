@@ -20,7 +20,7 @@ import {
   MenuItem,
   Chip,
   Box,
-  CircularProgress,
+  Skeleton,
   Alert,
   Tooltip,
   InputAdornment,
@@ -33,6 +33,7 @@ import {
   TablePagination,
   SelectChangeEvent,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import {
   Check as CheckIcon,
   Close as CloseIcon,
@@ -467,8 +468,13 @@ const ReservationsManagement: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <CircularProgress />
+      <Box sx={{ width: '100%' }}>
+        <Skeleton variant="text" width={300} height={48} sx={{ mb: 2 }} />
+        <Skeleton variant="rectangular" height={48} sx={{ borderRadius: 2, mb: 3 }} />
+        <Skeleton variant="rectangular" height={56} sx={{ borderRadius: 2, mb: 3 }} />
+        {[1, 2, 3, 4, 5].map(i => (
+          <Skeleton key={i} variant="rectangular" height={52} sx={{ borderRadius: 1, mb: 1 }} />
+        ))}
       </Box>
     );
   }
@@ -476,7 +482,7 @@ const ReservationsManagement: React.FC = () => {
   if (error) {
     return (
       <Box sx={{ p: 3 }}>
-        <Alert severity="error">Erreur lors du chargement des réservations</Alert>
+        <Alert severity="error" sx={{ borderRadius: 2 }}>Erreur lors du chargement des réservations</Alert>
       </Box>
     );
   }
@@ -484,19 +490,28 @@ const ReservationsManagement: React.FC = () => {
   return (
     <Box sx={{ width: '100%' }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h4">
+        <Typography variant="h4" sx={{ fontWeight: 800, letterSpacing: '-0.02em' }}>
           Gestion des Réservations
         </Typography>
         <Tooltip title={viewMode === 'table' ? 'Vue grille' : 'Vue tableau'}>
-          <IconButton onClick={() => setViewMode(viewMode === 'table' ? 'grid' : 'table')}>
+          <IconButton
+            onClick={() => setViewMode(viewMode === 'table' ? 'grid' : 'table')}
+            sx={{ bgcolor: alpha('#1565c0', 0.08), '&:hover': { bgcolor: alpha('#1565c0', 0.15) } }}
+          >
             {viewMode === 'table' ? <GridIcon /> : <ListIcon />}
           </IconButton>
         </Tooltip>
       </Box>
 
       {/* Onglets */}
-      <Paper sx={{ mb: 3 }}>
-        <Tabs value={tabValue} onChange={(_e, v) => setTabValue(v)} variant="fullWidth">
+      <Paper elevation={0} sx={{ mb: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
+        <Tabs
+          value={tabValue}
+          onChange={(_e, v) => setTabValue(v)}
+          variant="fullWidth"
+          TabIndicatorProps={{ sx: { bgcolor: '#1565c0', height: 3, borderRadius: '3px 3px 0 0' } }}
+          sx={{ '& .MuiTab-root': { fontWeight: 600, textTransform: 'none' } }}
+        >
           <Tab label={`Toutes (${reservations.length})`} />
           <Tab
             label={
@@ -514,7 +529,7 @@ const ReservationsManagement: React.FC = () => {
       </Paper>
 
       {/* Filtres */}
-      <Paper sx={{ p: 2, mb: 3 }}>
+      <Paper elevation={0} sx={{ p: 2, mb: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
         <Box display="flex" gap={2} flexWrap="wrap">
           <TextField
             placeholder="Rechercher..."
@@ -527,7 +542,7 @@ const ReservationsManagement: React.FC = () => {
                 </InputAdornment>
               ),
             }}
-            sx={{ minWidth: 250 }}
+            sx={{ minWidth: 250, '& .MuiOutlinedInput-root': { borderRadius: 2.5 } }}
           />
           <FormControl sx={{ minWidth: 150 }}>
             <InputLabel>Statut</InputLabel>
@@ -563,18 +578,18 @@ const ReservationsManagement: React.FC = () => {
 
       {/* Vue Tableau ou Grille selon viewMode */}
       {viewMode === 'table' ? (
-        <TableContainer component={Paper}>
+        <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
           <Table size="small">
             <TableHead>
-              <TableRow sx={{ backgroundColor: 'primary.main' }}>
-                <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>ID</TableCell>
-                <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Utilisateur</TableCell>
-                <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Salle</TableCell>
-                <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Date</TableCell>
-                <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Heures</TableCell>
-                <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Objet</TableCell>
-                <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Statut</TableCell>
-                <TableCell sx={{ color: 'white', fontWeight: 'bold' }} align="center">Actions</TableCell>
+              <TableRow>
+                <TableCell sx={{ bgcolor: alpha('#0a2463', 0.04), fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em' }}>ID</TableCell>
+                <TableCell sx={{ bgcolor: alpha('#0a2463', 0.04), fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em' }}>Utilisateur</TableCell>
+                <TableCell sx={{ bgcolor: alpha('#0a2463', 0.04), fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em' }}>Salle</TableCell>
+                <TableCell sx={{ bgcolor: alpha('#0a2463', 0.04), fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em' }}>Date</TableCell>
+                <TableCell sx={{ bgcolor: alpha('#0a2463', 0.04), fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em' }}>Heures</TableCell>
+                <TableCell sx={{ bgcolor: alpha('#0a2463', 0.04), fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em' }}>Objet</TableCell>
+                <TableCell sx={{ bgcolor: alpha('#0a2463', 0.04), fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em' }}>Statut</TableCell>
+                <TableCell sx={{ bgcolor: alpha('#0a2463', 0.04), fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em' }} align="center">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -682,7 +697,7 @@ const ReservationsManagement: React.FC = () => {
         <Grid container spacing={3}>
           {paginatedReservations.length === 0 ? (
             <Grid size={{ xs: 12 }}>
-              <Paper sx={{ p: 4, textAlign: 'center' }}>
+              <Paper elevation={0} sx={{ p: 4, textAlign: 'center', borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
                 <Typography color="text.secondary">Aucune réservation trouvée</Typography>
               </Paper>
             </Grid>
@@ -694,19 +709,10 @@ const ReservationsManagement: React.FC = () => {
                   onView={handleView}
                   onValidate={reservation.statut === 'en_attente' ? () => validateMutation.mutate(reservation.id) : undefined}
                   onReject={reservation.statut === 'en_attente' ? () => handleReject(reservation) : undefined}
+                  onDelete={handleDelete}
                   showActions={true}
                   isAdmin={true}
                 />
-                <Box display="flex" justifyContent="flex-end" mt={1}>
-                  <Button
-                    size="small"
-                    color="error"
-                    startIcon={<DeleteIcon />}
-                    onClick={() => handleDelete(reservation)}
-                  >
-                    Supprimer
-                  </Button>
-                </Box>
               </Grid>
             ))
           )}
@@ -727,8 +733,8 @@ const ReservationsManagement: React.FC = () => {
       />
 
       {/* Dialog Voir Détails */}
-      <Dialog open={openViewDialog} onClose={() => setOpenViewDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Détails de la réservation #{selectedReservation?.id}</DialogTitle>
+      <Dialog open={openViewDialog} onClose={() => setOpenViewDialog(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3, p: 1 } }}>
+        <DialogTitle sx={{ fontWeight: 700 }}>Détails de la réservation #{selectedReservation?.id}</DialogTitle>
         <DialogContent>
           {selectedReservation && (() => {
             const resAny = selectedReservation as any;
@@ -848,6 +854,7 @@ const ReservationsManagement: React.FC = () => {
                   validateMutation.mutate(selectedReservation.id);
                   setOpenViewDialog(false);
                 }}
+                sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
               >
                 Valider
               </Button>
@@ -859,12 +866,13 @@ const ReservationsManagement: React.FC = () => {
                   setOpenViewDialog(false);
                   handleReject(selectedReservation);
                 }}
+                sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
               >
                 Refuser
               </Button>
             </>
           )}
-          <Button onClick={() => setOpenViewDialog(false)}>Fermer</Button>
+          <Button onClick={() => setOpenViewDialog(false)} sx={{ borderRadius: 2, textTransform: 'none' }}>Fermer</Button>
         </DialogActions>
       </Dialog>
 
@@ -878,8 +886,9 @@ const ReservationsManagement: React.FC = () => {
         }}
         maxWidth="md"
         fullWidth
+        PaperProps={{ sx: { borderRadius: 3, p: 1 } }}
       >
-        <DialogTitle>Refuser la réservation</DialogTitle>
+        <DialogTitle sx={{ fontWeight: 700 }}>Refuser la réservation</DialogTitle>
         <DialogContent>
           {selectedReservation && (() => {
             const resAny = selectedReservation as any;
@@ -1031,7 +1040,7 @@ const ReservationsManagement: React.FC = () => {
             setOpenRejectDialog(false);
             setRejectionReason('');
             setProposeAlternative(false);
-          }}>
+          }} sx={{ borderRadius: 2, textTransform: 'none' }}>
             Annuler
           </Button>
           <Button
@@ -1039,6 +1048,7 @@ const ReservationsManagement: React.FC = () => {
             variant="contained"
             onClick={confirmReject}
             disabled={rejectMutation.isPending || !rejectionReason.trim()}
+            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
           >
             {rejectMutation.isPending ? 'Refus en cours...' : proposeAlternative ? 'Refuser et Proposer' : 'Confirmer le refus'}
           </Button>
@@ -1046,8 +1056,8 @@ const ReservationsManagement: React.FC = () => {
       </Dialog>
 
       {/* Dialog Confirmation Suppression */}
-      <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
-        <DialogTitle>Confirmer la suppression</DialogTitle>
+      <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)} PaperProps={{ sx: { borderRadius: 3, p: 1 } }}>
+        <DialogTitle sx={{ fontWeight: 700 }}>Confirmer la suppression</DialogTitle>
         <DialogContent>
           <Typography>
             Êtes-vous sûr de vouloir supprimer la réservation #{selectedReservation?.id} ?
@@ -1057,12 +1067,13 @@ const ReservationsManagement: React.FC = () => {
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDeleteDialog(false)}>Annuler</Button>
+          <Button onClick={() => setOpenDeleteDialog(false)} sx={{ borderRadius: 2, textTransform: 'none' }}>Annuler</Button>
           <Button
             color="error"
             variant="contained"
             onClick={confirmDelete}
             disabled={deleteMutation.isPending}
+            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
           >
             {deleteMutation.isPending ? 'Suppression...' : 'Supprimer'}
           </Button>

@@ -23,7 +23,7 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  CircularProgress,
+  Skeleton,
   Alert,
   Tooltip,
   Card,
@@ -31,6 +31,7 @@ import {
   CardActions,
   MenuItem,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
 
 const Departments: React.FC = () => {
@@ -153,11 +154,16 @@ const Departments: React.FC = () => {
   const handleChangeRowsPerPage = (e: React.ChangeEvent<HTMLInputElement>) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); };
 
   if (isLoading) return (
-    <Box display="flex" justifyContent="center" alignItems="center" minHeight={300}><CircularProgress /></Box>
+    <Box sx={{ width: '100%' }}>
+      <Skeleton variant="text" width={300} height={48} sx={{ mb: 3 }} />
+      {[1, 2, 3, 4].map(i => (
+        <Skeleton key={i} variant="rectangular" height={52} sx={{ borderRadius: 1, mb: 1 }} />
+      ))}
+    </Box>
   );
 
   if (error) return (
-    <Box sx={{ p: 3 }}><Alert severity="error">Erreur lors du chargement des départements</Alert></Box>
+    <Box sx={{ p: 3 }}><Alert severity="error" sx={{ borderRadius: 2 }}>Erreur lors du chargement des départements</Alert></Box>
   );
 
   // Show notice if meta flags indicate purge and user hasn't dismissed
@@ -186,25 +192,48 @@ const Departments: React.FC = () => {
         </Box>
       )}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4">Gestion des Départements</Typography>
-        <Box>
-          <Button sx={{ mr: 1 }} variant={viewMode === 'table' ? 'contained' : 'outlined'} onClick={() => setViewMode('table')}>Table</Button>
-          <Button sx={{ mr: 2 }} variant={viewMode === 'cards' ? 'contained' : 'outlined'} onClick={() => setViewMode('cards')}>Cartes</Button>
-          <Button variant="contained" startIcon={<AddIcon />} onClick={() => handleOpenDialog()}>
+        <Typography variant="h4" sx={{ fontWeight: 800, letterSpacing: '-0.02em' }}>Gestion des Départements</Typography>
+        <Box display="flex" gap={1}>
+          <Button
+            variant={viewMode === 'table' ? 'contained' : 'outlined'}
+            onClick={() => setViewMode('table')}
+            sx={{
+              borderRadius: 2, textTransform: 'none', fontWeight: 600,
+              ...(viewMode === 'table' ? { background: 'linear-gradient(135deg, #0a2463 0%, #1565c0 100%)', '&:hover': { background: 'linear-gradient(135deg, #0a2463 0%, #1565c0 100%)' } } : {}),
+            }}
+          >Table</Button>
+          <Button
+            variant={viewMode === 'cards' ? 'contained' : 'outlined'}
+            onClick={() => setViewMode('cards')}
+            sx={{
+              borderRadius: 2, textTransform: 'none', fontWeight: 600,
+              ...(viewMode === 'cards' ? { background: 'linear-gradient(135deg, #0a2463 0%, #1565c0 100%)', '&:hover': { background: 'linear-gradient(135deg, #0a2463 0%, #1565c0 100%)' } } : {}),
+            }}
+          >Cartes</Button>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => handleOpenDialog()}
+            sx={{
+              borderRadius: 2, textTransform: 'none', fontWeight: 600,
+              background: 'linear-gradient(135deg, #0a2463 0%, #1565c0 100%)',
+              '&:hover': { background: 'linear-gradient(135deg, #0a2463 0%, #1565c0 100%)' },
+            }}
+          >
             Nouveau Département
           </Button>
         </Box>
       </Box>
       {viewMode === 'table' ? (
-        <TableContainer component={Paper}>
+        <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
         <Table>
           <TableHead>
-            <TableRow sx={{ backgroundColor: 'primary.main' }}>
-              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>ID</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Nom</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Responsable</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Créé le</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 'bold' }} align="center">Actions</TableCell>
+            <TableRow>
+              <TableCell sx={{ bgcolor: alpha('#0a2463', 0.04), fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em' }}>ID</TableCell>
+              <TableCell sx={{ bgcolor: alpha('#0a2463', 0.04), fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em' }}>Nom</TableCell>
+              <TableCell sx={{ bgcolor: alpha('#0a2463', 0.04), fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em' }}>Responsable</TableCell>
+              <TableCell sx={{ bgcolor: alpha('#0a2463', 0.04), fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em' }}>Créé le</TableCell>
+              <TableCell sx={{ bgcolor: alpha('#0a2463', 0.04), fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em' }} align="center">Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -251,7 +280,7 @@ const Departments: React.FC = () => {
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
           {paginated.map((dep) => (
             <Box key={dep.id} sx={{ width: { xs: '100%', sm: '48%', md: '31%' } }}>
-              <Card>
+              <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
                 <CardContent>
                   <Box sx={{ fontWeight: 700, fontSize: '1.05rem' }}>{dep.name}</Box>
                   {dep.description && <Box sx={{ mt: 1, color: 'text.secondary' }}>{dep.description}</Box>}
@@ -265,8 +294,8 @@ const Departments: React.FC = () => {
                   <Box sx={{ mt: 1, color: 'text.secondary' }}>Créé le: {formatDate(dep.created_at ?? (dep as any).createdAt)}</Box>
                 </CardContent>
                 <CardActions>
-                  <Button size="small" onClick={() => handleOpenDialog(dep)}>Modifier</Button>
-                  <Button size="small" color="error" onClick={() => handleDelete(dep)}>Supprimer</Button>
+                  <Button size="small" onClick={() => handleOpenDialog(dep)} sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}>Modifier</Button>
+                  <Button size="small" color="error" onClick={() => handleDelete(dep)} sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}>Supprimer</Button>
                 </CardActions>
               </Card>
             </Box>
@@ -274,9 +303,9 @@ const Departments: React.FC = () => {
         </Box>
       )}
 
-      <Dialog open={openDialog} onClose={handleCloseDialog} fullWidth maxWidth="sm">
+      <Dialog open={openDialog} onClose={handleCloseDialog} fullWidth maxWidth="sm" PaperProps={{ sx: { borderRadius: 3, p: 1 } }}>
         <form onSubmit={handleSubmit}>
-          <DialogTitle>{selected ? 'Modifier Département' : 'Nouveau Département'}</DialogTitle>
+          <DialogTitle sx={{ fontWeight: 700 }}>{selected ? 'Modifier Département' : 'Nouveau Département'}</DialogTitle>
           <DialogContent>
             <TextField
               autoFocus
@@ -326,20 +355,20 @@ const Departments: React.FC = () => {
             </Box>
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleCloseDialog}>Annuler</Button>
-            <Button type="submit" variant="contained">Enregistrer</Button>
+            <Button onClick={handleCloseDialog} sx={{ borderRadius: 2, textTransform: 'none' }}>Annuler</Button>
+            <Button type="submit" variant="contained" sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600, background: 'linear-gradient(135deg, #0a2463 0%, #1565c0 100%)', '&:hover': { background: 'linear-gradient(135deg, #0a2463 0%, #1565c0 100%)' } }}>Enregistrer</Button>
           </DialogActions>
         </form>
       </Dialog>
 
-      <Dialog open={openDelete} onClose={() => setOpenDelete(false)}>
-        <DialogTitle>Confirmer la suppression</DialogTitle>
+      <Dialog open={openDelete} onClose={() => setOpenDelete(false)} PaperProps={{ sx: { borderRadius: 3, p: 1 } }}>
+        <DialogTitle sx={{ fontWeight: 700 }}>Confirmer la suppression</DialogTitle>
         <DialogContent>
           <Typography>Voulez-vous supprimer le département « {selected?.name} » ? Cette action est irréversible.</Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDelete(false)}>Annuler</Button>
-          <Button color="error" variant="contained" onClick={confirmDelete}>Supprimer</Button>
+          <Button onClick={() => setOpenDelete(false)} sx={{ borderRadius: 2, textTransform: 'none' }}>Annuler</Button>
+          <Button color="error" variant="contained" onClick={confirmDelete} sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}>Supprimer</Button>
         </DialogActions>
       </Dialog>
     </Box>

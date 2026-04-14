@@ -25,7 +25,7 @@ import {
   DialogActions,
   Chip,
   Box,
-  CircularProgress,
+  Skeleton,
   Alert,
   Tooltip,
   InputAdornment,
@@ -43,6 +43,7 @@ import {
   ViewList as ListIcon,
   ViewModule as GridIcon,
 } from '@mui/icons-material';
+import { alpha } from '@mui/material/styles';
 
 interface RoomFormData {
   nom: string;
@@ -241,8 +242,16 @@ const RoomsManagement: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <CircularProgress />
+      <Box sx={{ width: '100%' }}>
+        <Skeleton variant="text" width={260} height={48} sx={{ mb: 3 }} />
+        <Skeleton variant="rectangular" height={56} sx={{ borderRadius: 2, mb: 3 }} />
+        <Grid container spacing={2}>
+          {[1, 2, 3, 4, 5, 6].map(i => (
+            <Grid size={{ xs: 12, sm: 6 }} key={i}>
+              <Skeleton variant="rectangular" height={180} sx={{ borderRadius: 3 }} />
+            </Grid>
+          ))}
+        </Grid>
       </Box>
     );
   }
@@ -250,7 +259,7 @@ const RoomsManagement: React.FC = () => {
   if (error) {
     return (
       <Box sx={{ p: 3 }}>
-        <Alert severity="error">Erreur lors du chargement des salles</Alert>
+        <Alert severity="error" sx={{ borderRadius: 2 }}>Erreur lors du chargement des salles</Alert>
       </Box>
     );
   }
@@ -258,10 +267,13 @@ const RoomsManagement: React.FC = () => {
   return (
     <Box sx={{ width: '100%' }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4">Gestion des Salles</Typography>
+        <Typography variant="h4" sx={{ fontWeight: 800, letterSpacing: '-0.02em' }}>Gestion des Salles</Typography>
         <Box display="flex" gap={2}>
           <Tooltip title={viewMode === 'table' ? 'Vue grille' : 'Vue tableau'}>
-            <IconButton onClick={() => setViewMode(viewMode === 'table' ? 'grid' : 'table')}>
+            <IconButton
+              onClick={() => setViewMode(viewMode === 'table' ? 'grid' : 'table')}
+              sx={{ bgcolor: alpha('#1565c0', 0.08), '&:hover': { bgcolor: alpha('#1565c0', 0.15) } }}
+            >
               {viewMode === 'table' ? <GridIcon /> : <ListIcon />}
             </IconButton>
           </Tooltip>
@@ -269,6 +281,13 @@ const RoomsManagement: React.FC = () => {
             variant="contained"
             startIcon={<AddIcon />}
             onClick={() => handleOpenDialog()}
+            sx={{
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              background: 'linear-gradient(135deg, #0a2463 0%, #1565c0 100%)',
+              '&:hover': { background: 'linear-gradient(135deg, #0a2463 0%, #1565c0 100%)' },
+            }}
           >
             Nouvelle Salle
           </Button>
@@ -276,7 +295,7 @@ const RoomsManagement: React.FC = () => {
       </Box>
 
       {/* Barre de recherche */}
-      <Paper sx={{ p: 2, mb: 3 }}>
+      <Paper elevation={0} sx={{ p: 2, mb: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
         <TextField
           fullWidth
           placeholder="Rechercher une salle..."
@@ -289,6 +308,7 @@ const RoomsManagement: React.FC = () => {
               </InputAdornment>
             ),
           }}
+          sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2.5 } }}
         />
       </Paper>
 
@@ -337,16 +357,16 @@ const RoomsManagement: React.FC = () => {
 
       {/* Vue Tableau */}
       {viewMode === 'table' ? (
-        <TableContainer component={Paper}>
+        <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
           <Table>
             <TableHead>
-              <TableRow sx={{ backgroundColor: 'primary.main' }}>
-                <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>ID</TableCell>
-                <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Nom</TableCell>
-                <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Capacité</TableCell>
-                <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Équipements</TableCell>
-                <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Statut</TableCell>
-                <TableCell sx={{ color: 'white', fontWeight: 'bold' }} align="center">Actions</TableCell>
+              <TableRow>
+                <TableCell sx={{ bgcolor: alpha('#0a2463', 0.04), fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em' }}>ID</TableCell>
+                <TableCell sx={{ bgcolor: alpha('#0a2463', 0.04), fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em' }}>Nom</TableCell>
+                <TableCell sx={{ bgcolor: alpha('#0a2463', 0.04), fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em' }}>Capacité</TableCell>
+                <TableCell sx={{ bgcolor: alpha('#0a2463', 0.04), fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em' }}>Équipements</TableCell>
+                <TableCell sx={{ bgcolor: alpha('#0a2463', 0.04), fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em' }}>Statut</TableCell>
+                <TableCell sx={{ bgcolor: alpha('#0a2463', 0.04), fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em' }} align="center">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -426,7 +446,8 @@ const RoomsManagement: React.FC = () => {
         <Grid container spacing={2}>
           {filteredRooms.length === 0 ? (
             <Grid size={{ xs: 12 }}>
-              <Paper sx={{ p: 4, textAlign: 'center' }}>
+              <Paper elevation={0} sx={{ p: 4, textAlign: 'center', borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
+                <RoomIcon sx={{ fontSize: 56, color: 'text.disabled', mb: 1 }} />
                 <Typography color="text.secondary">Aucune salle trouvée</Typography>
               </Paper>
             </Grid>
@@ -453,7 +474,7 @@ const RoomsManagement: React.FC = () => {
                         startIcon={<EditIcon />}
                         onClick={() => handleOpenDialog(room)}
                         fullWidth
-                        sx={{ fontSize: '0.75rem', py: 0.5 }}
+                        sx={{ fontSize: '0.75rem', py: 0.5, borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
                       >
                         Modifier
                       </Button>
@@ -464,7 +485,7 @@ const RoomsManagement: React.FC = () => {
                         startIcon={<DeleteIcon />}
                         onClick={() => handleDelete(room)}
                         fullWidth
-                        sx={{ fontSize: '0.75rem', py: 0.5 }}
+                        sx={{ fontSize: '0.75rem', py: 0.5, borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
                       >
                         Supprimer
                       </Button>
@@ -501,8 +522,8 @@ const RoomsManagement: React.FC = () => {
       />
 
       {/* Dialog Confirmation Suppression */}
-      <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
-        <DialogTitle>Confirmer la suppression</DialogTitle>
+      <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)} PaperProps={{ sx: { borderRadius: 3, p: 1 } }}>
+        <DialogTitle sx={{ fontWeight: 700 }}>Confirmer la suppression</DialogTitle>
         <DialogContent>
           <Typography>
             Êtes-vous sûr de vouloir supprimer la salle <strong>{selectedRoom?.nom}</strong> ?
@@ -512,12 +533,13 @@ const RoomsManagement: React.FC = () => {
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDeleteDialog(false)}>Annuler</Button>
+          <Button onClick={() => setOpenDeleteDialog(false)} sx={{ borderRadius: 2, textTransform: 'none' }}>Annuler</Button>
           <Button
             color="error"
             variant="contained"
             onClick={confirmDelete}
             disabled={deleteMutation.isPending}
+            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
           >
             {deleteMutation.isPending ? 'Suppression...' : 'Supprimer'}
           </Button>

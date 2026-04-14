@@ -24,6 +24,7 @@ import {
   TablePagination,
   Tooltip,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import {
   Download as DownloadIcon,
   Refresh as RefreshIcon,
@@ -158,7 +159,7 @@ const AdminHistory: React.FC = () => {
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Box>
-          <Typography variant="h4" gutterBottom>
+          <Typography variant="h4" sx={{ fontWeight: 800, letterSpacing: '-0.02em' }} gutterBottom>
             Historique Global
           </Typography>
           <Typography variant="body2" color="text.secondary">
@@ -185,7 +186,7 @@ const AdminHistory: React.FC = () => {
             color="error"
             onClick={() => useHistoryStore.getState().clearHistory()}
           >
-            Supprimer tout l’historique (local)
+            Supprimer tout l'historique (local)
           </Button>
           <Button
             variant="contained"
@@ -193,15 +194,14 @@ const AdminHistory: React.FC = () => {
             disabled={deleting}
             onClick={handleClearBackend}
           >
-            Supprimer tout l’historique (backend)
+            Supprimer tout l'historique (backend)
           </Button>
         </Box>
       </Box>
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card>
-            <CardContent>
+          <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider' }}><CardContent>
               <Box display="flex" alignItems="center" gap={2}>
                 <Avatar sx={{ bgcolor: 'primary.main' }}>
                   <HistoryIcon />
@@ -217,8 +217,7 @@ const AdminHistory: React.FC = () => {
           </Card>
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card>
-            <CardContent>
+          <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider' }}><CardContent>
               <Box display="flex" alignItems="center" gap={2}>
                 <Avatar sx={{ bgcolor: 'info.main' }}>📝</Avatar>
                 <Box>
@@ -232,8 +231,7 @@ const AdminHistory: React.FC = () => {
           </Card>
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card>
-            <CardContent>
+          <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider' }}><CardContent>
               <Box display="flex" alignItems="center" gap={2}>
                 <Avatar sx={{ bgcolor: 'success.main' }}>✅</Avatar>
                 <Box>
@@ -247,8 +245,7 @@ const AdminHistory: React.FC = () => {
           </Card>
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card>
-            <CardContent>
+          <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider' }}><CardContent>
               <Box display="flex" alignItems="center" gap={2}>
                 <Avatar sx={{ bgcolor: 'error.main' }}>❌</Avatar>
                 <Box>
@@ -263,7 +260,7 @@ const AdminHistory: React.FC = () => {
         </Grid>
       </Grid>
 
-      <Paper sx={{ p: 2, mb: 2 }}>
+      <Paper elevation={0} sx={{ p: 2, mb: 2, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, md: 4 }}>
             <TextField
@@ -317,7 +314,7 @@ const AdminHistory: React.FC = () => {
         </Grid>
       </Paper>
 
-      <TableContainer component={Paper}>
+      <TableContainer component={Paper} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
         {displayHistory.length === 0 ? (
           <Box textAlign="center" py={8}>
             <HistoryIcon sx={{ fontSize: 100, color: 'text.disabled', mb: 2 }} />
@@ -331,13 +328,13 @@ const AdminHistory: React.FC = () => {
         ) : (
           <Table>
             <TableHead>
-              <TableRow sx={{ bgcolor: 'primary.main' }}>
-                <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Date</TableCell>
-                <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Action</TableCell>
-                <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Utilisateur</TableCell>
-                <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Description</TableCell>
+              <TableRow sx={{ bgcolor: alpha('#0a2463', 0.04) }}>
+                <TableCell sx={{ fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Date</TableCell>
+                <TableCell sx={{ fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Action</TableCell>
+                <TableCell sx={{ fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Utilisateur</TableCell>
+                <TableCell sx={{ fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Description</TableCell>
                 {isAdmin && (
-                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Détails</TableCell>
+                  <TableCell sx={{ fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Détails</TableCell>
                 )}
               </TableRow>
             </TableHead>

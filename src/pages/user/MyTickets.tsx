@@ -8,11 +8,12 @@ import {
   Avatar,
   Paper,
   Alert,
-  CircularProgress,
+  Skeleton,
   Divider,
   IconButton,
   Tooltip,
   Collapse,
+  alpha,
 } from '@mui/material';
 import {
   BugReport as BugIcon,
@@ -118,42 +119,47 @@ const MyTickets: React.FC = () => {
   };
 
   return (
-    <Box>
+    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1200, mx: 'auto' }}>
       {/* Header */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Box>
-          <Typography variant="h4" fontWeight="bold" gutterBottom>
+          <Typography variant="h4" sx={{ fontWeight: 800, letterSpacing: '-0.02em' }}>
             Mes Signalements
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body1" color="text.secondary" sx={{ mt: 0.5 }}>
             Suivez vos demandes de support et les réponses des administrateurs
           </Typography>
         </Box>
         <Tooltip title="Actualiser">
-          <IconButton onClick={fetchTickets}>
+          <IconButton
+            onClick={fetchTickets}
+            sx={{ bgcolor: alpha('#1565c0', 0.08), color: '#1565c0', borderRadius: 2, '&:hover': { bgcolor: alpha('#1565c0', 0.15) } }}
+          >
             <RefreshIcon />
           </IconButton>
         </Tooltip>
       </Box>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+        <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }} onClose={() => setError(null)}>
           {error}
         </Alert>
       )}
 
       {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-          <CircularProgress />
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {[0,1,2].map(i => (
+            <Skeleton key={i} variant="rounded" height={160} sx={{ borderRadius: 3 }} />
+          ))}
         </Box>
       ) : tickets.length === 0 ? (
-        <Paper sx={{ p: 4, textAlign: 'center' }}>
-          <QuestionIcon sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
-          <Typography variant="h6" color="text.secondary">
+        <Paper elevation={0} sx={{ p: 5, textAlign: 'center', borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
+          <QuestionIcon sx={{ fontSize: 56, color: 'text.disabled', mb: 1.5 }} />
+          <Typography variant="h6" color="text.secondary" sx={{ fontWeight: 600 }}>
             Aucun signalement
           </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Vous n'avez pas encore signalé de problème. Utilisez le bouton "Aide" dans le menu pour signaler un problème.
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            Utilisez le bouton "Aide" dans le menu pour signaler un problème.
           </Typography>
         </Paper>
       ) : (
@@ -166,11 +172,17 @@ const MyTickets: React.FC = () => {
             const hasResponses = responses.length > 0;
 
             return (
-              <Card key={ticket.id} sx={{ 
-                border: hasResponses ? '2px solid' : '1px solid',
-                borderColor: hasResponses ? 'primary.main' : 'divider',
-              }}>
-                <CardContent>
+              <Card
+                key={ticket.id}
+                elevation={0}
+                sx={{ 
+                  border: hasResponses ? '2px solid' : '1px solid',
+                  borderColor: hasResponses ? alpha('#1565c0', 0.4) : 'divider',
+                  borderRadius: 3,
+                  transition: 'all 0.2s ease',
+                  '&:hover': { borderColor: hasResponses ? '#1565c0' : alpha('#1565c0', 0.3) },
+                }}
+              >                <CardContent>
                   {/* En-tête du ticket */}
                   <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
                     <Avatar sx={{ bgcolor: category.color }}>
