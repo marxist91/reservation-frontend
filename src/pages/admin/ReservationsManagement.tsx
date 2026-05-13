@@ -42,7 +42,9 @@ import {
   Visibility as ViewIcon,
   ViewList as ListIcon,
   ViewModule as GridIcon,
+  FilterList as FilterIcon,
 } from '@mui/icons-material';
+import { startOfDay, startOfWeek, startOfMonth, endOfDay, endOfWeek, endOfMonth, isWithinInterval, parseISO } from 'date-fns';
 import { reservationsAPI } from '@/api/reservations';
 import { roomsAPI } from '@/api/rooms';
 import { usersAPI } from '@/api/users';
@@ -78,6 +80,8 @@ const ReservationsManagement: React.FC = () => {
   const [tabValue, setTabValue] = useState(0);
   const [statusFilter, setStatusFilter] = useState('all');
   const [roomFilter, setRoomFilter] = useState('all');
+  const [departmentFilter, setDepartmentFilter] = useState('all');
+  const [periodFilter, setPeriodFilter] = useState('all');
   const [viewMode, setViewMode] = useState<ViewMode>('table');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -416,12 +420,35 @@ const ReservationsManagement: React.FC = () => {
     }
   };
 
+  // Helper: filtrer par période
+  const isInPeriod = (dateStr: string, period: string): boolean => {
+    if (period === 'all') return true;
+    try {
+      const date = parseISO(dateStr);
+      const now = new Date();
+      if (period === 'day') return isWithinInterval(date, { start: startOfDay(now), end: endOfDay(now) });
+      if (period === 'week') return isWithinInterval(date, { start: startOfWeek(now, { weekStartsOn: 1 }), end: endOfWeek(now, { weekStartsOn: 1 }) });
+      if (period === 'month') return isWithinInterval(date, { start: startOfMonth(now), end: endOfMonth(now) });
+    } catch { return true; }
+    return true;
+  };
+
   // Appliquer les filtres supplémentaires
   const filteredReservations = getFilteredByTab()
     .filter((reservation) => {
       const resAny = reservation as any;
       if (statusFilter !== 'all' && reservation.statut !== statusFilter) return false;
       if (roomFilter !== 'all' && reservation.room_id !== parseInt(roomFilter)) return false;
+      // Filtre département
+      if (departmentFilter !== 'all') {
+        const deptId = resAny.department_id ?? resAny.utilisateur?.department_id ?? null;
+        if (String(deptId) !== departmentFilter) return false;
+      }
+      // Filtre période
+      if (periodFilter !== 'all') {
+        const dateRef = reservation.date || (reservation.date_debut ? reservation.date_debut.split('T')[0] : '');
+        if (!dateRef || !isInPeriod(dateRef, periodFilter)) return false;
+      }
       if (searchTerm) {
         const searchString = `${resAny.utilisateur?.prenom || ''} ${resAny.utilisateur?.nom || ''} ${resAny.utilisateur?.email || ''} ${resAny.salle?.nom || ''} ${reservation.motif || ''}`
           .toLowerCase();
@@ -530,6 +557,15 @@ const ReservationsManagement: React.FC = () => {
 
       {/* Filtres */}
       <Paper elevation={0} sx={{ p: 2, mb: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
+        <Box display="flex" alignItems="center" gap={1} mb={1.5}>
+          <FilterIcon sx={{ color: 'text.secondary', fontSize: 18 }} />
+          <Typography variant="subtitle2" color="text.secondary" fontWeight={600}>Filtres</Typography>
+          {(statusFilter !== 'all' || roomFilter !== 'all' || departmentFilter !== 'all' || periodFilter !== 'all' || searchTerm) && (
+            <Button size="small" onClick={() => { setStatusFilter('all'); setRoomFilter('all'); setDepartmentFilter('all'); setPeriodFilter('all'); setSearchTerm(''); }} sx={{ ml: 'auto', textTransform: 'none', fontSize: '0.75rem' }}>
+              Réinitialiser
+            </Button>
+          )}
+        </Box>
         <Box display="flex" gap={2} flexWrap="wrap">
           <TextField
             placeholder="Rechercher..."
@@ -542,14 +578,29 @@ const ReservationsManagement: React.FC = () => {
                 </InputAdornment>
               ),
             }}
-            sx={{ minWidth: 250, '& .MuiOutlinedInput-root': { borderRadius: 2.5 } }}
+            sx={{ minWidth: 220, '& .MuiOutlinedInput-root': { borderRadius: 2.5 } }}
           />
+          {/* Filtre Période */}
+          <FormControl sx={{ minWidth: 160 }}>
+            <InputLabel>Période</InputLabel>
+            <Select
+              value={periodFilter}
+              label="Période"
+              onChange={(e: SelectChangeEvent) => { setPeriodFilter(e.target.value); setPage(0); }}
+            >
+              <MenuItem value="all">Toutes les dates</MenuItem>
+              <MenuItem value="day">Aujourd'hui</MenuItem>
+              <MenuItem value="week">Cette semaine</MenuItem>
+              <MenuItem value="month">Ce mois</MenuItem>
+            </Select>
+          </FormControl>
+          {/* Filtre Statut */}
           <FormControl sx={{ minWidth: 150 }}>
             <InputLabel>Statut</InputLabel>
             <Select
               value={statusFilter}
               label="Statut"
-              onChange={(e: SelectChangeEvent) => setStatusFilter(e.target.value)}
+              onChange={(e: SelectChangeEvent) => { setStatusFilter(e.target.value); setPage(0); }}
             >
               <MenuItem value="all">Tous</MenuItem>
               <MenuItem value="en_attente">En attente</MenuItem>
@@ -558,12 +609,13 @@ const ReservationsManagement: React.FC = () => {
               <MenuItem value="annulee">Annulée</MenuItem>
             </Select>
           </FormControl>
-          <FormControl sx={{ minWidth: 200 }}>
+          {/* Filtre Salle */}
+          <FormControl sx={{ minWidth: 180 }}>
             <InputLabel>Salle</InputLabel>
             <Select
               value={roomFilter}
               label="Salle"
-              onChange={(e: SelectChangeEvent) => setRoomFilter(e.target.value)}
+              onChange={(e: SelectChangeEvent) => { setRoomFilter(e.target.value); setPage(0); }}
             >
               <MenuItem value="all">Toutes les salles</MenuItem>
               {rooms.map((room) => (
@@ -573,6 +625,30 @@ const ReservationsManagement: React.FC = () => {
               ))}
             </Select>
           </FormControl>
+          {/* Filtre Département */}
+          <FormControl sx={{ minWidth: 200 }}>
+            <InputLabel>Département</InputLabel>
+            <Select
+              value={departmentFilter}
+              label="Département"
+              onChange={(e: SelectChangeEvent) => { setDepartmentFilter(e.target.value); setPage(0); }}
+            >
+              <MenuItem value="all">Tous les départements</MenuItem>
+              {departments.map((dept: any) => (
+                <MenuItem key={dept.id} value={dept.id.toString()}>
+                  {dept.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
+        {/* Compteur résultats */}
+        <Box mt={1.5}>
+          <Typography variant="caption" color="text.secondary">
+            {filteredReservations.length} réservation{filteredReservations.length !== 1 ? 's' : ''} affichée{filteredReservations.length !== 1 ? 's' : ''}
+            {periodFilter !== 'all' && ` · ${periodFilter === 'day' ? "aujourd'hui" : periodFilter === 'week' ? 'cette semaine' : 'ce mois'}`}
+            {departmentFilter !== 'all' && ` · ${departments.find((d: any) => d.id.toString() === departmentFilter)?.name || ''}`}
+          </Typography>
         </Box>
       </Paper>
 
@@ -584,6 +660,7 @@ const ReservationsManagement: React.FC = () => {
               <TableRow>
                 <TableCell sx={{ bgcolor: alpha('#0a2463', 0.04), fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em' }}>ID</TableCell>
                 <TableCell sx={{ bgcolor: alpha('#0a2463', 0.04), fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em' }}>Utilisateur</TableCell>
+                <TableCell sx={{ bgcolor: alpha('#0a2463', 0.04), fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em' }}>Département</TableCell>
                 <TableCell sx={{ bgcolor: alpha('#0a2463', 0.04), fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em' }}>Salle</TableCell>
                 <TableCell sx={{ bgcolor: alpha('#0a2463', 0.04), fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em' }}>Date</TableCell>
                 <TableCell sx={{ bgcolor: alpha('#0a2463', 0.04), fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em' }}>Heures</TableCell>
@@ -595,7 +672,7 @@ const ReservationsManagement: React.FC = () => {
             <TableBody>
               {paginatedReservations.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} align="center">
+                  <TableCell colSpan={9} align="center">
                     Aucune réservation trouvée
                   </TableCell>
                 </TableRow>
@@ -620,6 +697,14 @@ const ReservationsManagement: React.FC = () => {
                         {resAny.utilisateur 
                           ? `${resAny.utilisateur.prenom} ${resAny.utilisateur.nom}`
                           : getUserName(reservation.user_id)}
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" noWrap sx={{ maxWidth: 140 }}>
+                          {resAny.department?.name ||
+                            resAny.utilisateur?.department?.name ||
+                            (departments.find((d: any) => d.id === (resAny.department_id ?? resAny.utilisateur?.department_id))?.name) ||
+                            '—'}
+                        </Typography>
                       </TableCell>
                       <TableCell>
                         {resAny.salle?.nom || getRoomName(reservation.room_id)}
